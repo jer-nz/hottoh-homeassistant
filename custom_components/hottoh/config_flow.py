@@ -87,6 +87,7 @@ class HottohConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         self._discovered: dict[str, Any] = {}
+        self._entry: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -114,10 +115,11 @@ class HottohConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: host, CONF_PORT: port}
                 )
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data={CONF_HOST: host, CONF_PORT: port},
-                )
+                self._entry = {
+                    "title": user_input[CONF_NAME],
+                    "data": {CONF_HOST: host, CONF_PORT: port},
+                }
+                return await self.async_step_thermostat()
         return self.async_show_form(
             step_id="user",
             data_schema=_connection_schema(user_input or {}, with_name=True),
@@ -154,13 +156,14 @@ class HottohConfigFlow(ConfigFlow, domain=DOMAIN):
             except HottohError:
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data={
+                self._entry = {
+                    "title": user_input[CONF_NAME],
+                    "data": {
                         CONF_HOST: self._discovered[CONF_HOST],
                         CONF_PORT: self._discovered[CONF_PORT],
                     },
-                )
+                }
+                return await self.async_step_thermostat()
         return self.async_show_form(
             step_id="hassio_confirm",
             data_schema=vol.Schema(
@@ -168,6 +171,33 @@ class HottohConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={"addon": self._discovered["addon"]},
             errors=errors,
+        )
+
+    async def async_step_thermostat(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Temperature source of the thermostat (the rest is in the options)."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._entry["title"],
+                data=self._entry["data"],
+                options={
+                    CONF_TEMPERATURE_SENSOR: user_input.get(CONF_TEMPERATURE_SENSOR),
+                    CONF_REGULATION_MODE: user_input[CONF_REGULATION_MODE],
+                },
+            )
+        return self.async_show_form(
+            step_id="thermostat",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_TEMPERATURE_SENSOR
+                    ): _temperature_sensor_selector(),
+                    vol.Required(
+                        CONF_REGULATION_MODE, default=REGULATION_ON_OFF
+                    ): _regulation_selector(),
+                }
+            ),
         )
 
     async def async_step_reconfigure(
@@ -194,6 +224,23 @@ class HottohConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+
+def _temperature_sensor_selector() -> selector.EntitySelector:
+    return selector.EntitySelector(
+        selector.EntitySelectorConfig(
+            domain="sensor", device_class=SensorDeviceClass.TEMPERATURE
+        )
+    )
+
+
+def _regulation_selector() -> selector.SelectSelector:
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=[REGULATION_ON_OFF, REGULATION_COMPENSATED],
+            translation_key=CONF_REGULATION_MODE,
+        )
+    )
 
 
 def _number(
@@ -233,20 +280,11 @@ class HottohOptionsFlow(OptionsFlowWithReload):
                     description={
                         "suggested_value": options.get(CONF_TEMPERATURE_SENSOR)
                     },
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain="sensor", device_class=SensorDeviceClass.TEMPERATURE
-                    )
-                ),
+                ): _temperature_sensor_selector(),
                 vol.Required(
                     CONF_REGULATION_MODE,
                     default=options.get(CONF_REGULATION_MODE, REGULATION_ON_OFF),
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[REGULATION_ON_OFF, REGULATION_COMPENSATED],
-                        translation_key=CONF_REGULATION_MODE,
-                    )
-                ),
+                ): _regulation_selector(),
                 vol.Required(
                     CONF_HYSTERESIS_LOW,
                     default=options.get(CONF_HYSTERESIS_LOW, DEFAULT_HYSTERESIS_LOW),

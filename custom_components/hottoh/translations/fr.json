@@ -36,6 +36,18 @@
           "host": "Nom ou adresse IP de la machine qui fait tourner hottoh_api.",
           "port": "Port HTTP de hottoh_api (`[http_api] port`)."
         }
+      },
+      "thermostat": {
+        "title": "Thermostat",
+        "description": "Choisissez la température qui pilote le poêle. Laissez la sonde vide pour utiliser la sonde du poêle (le poêle régule seul). Hystérésis, durées minimales et notifications se règlent ensuite dans *Configurer*.",
+        "data": {
+          "temperature_sensor": "Sonde de température externe",
+          "regulation_mode": "Régulation sur la sonde externe"
+        },
+        "data_description": {
+          "temperature_sensor": "N'importe quelle sonde de température de Home Assistant, dans la pièce à chauffer.",
+          "regulation_mode": "Marche/arrêt : Home Assistant allume et éteint le poêle autour de la consigne. Consigne compensée : le poêle reste allumé, sa consigne est décalée."
+        }
       }
     },
     "error": {

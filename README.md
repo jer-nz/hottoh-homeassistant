@@ -36,10 +36,13 @@ configuration and restart.
 
 Then *Settings > Devices & services > Add integration > HottoH*, and enter the host and HTTP port
 of hottoh_api (3000 by default).
+The next step chooses the temperature that drives the stove: its own probe, or any temperature
+sensor of Home Assistant.
 
 ## Thermostat
 
-Set in *Configure* on the integration.
+Temperature source and regulation mode are chosen when the stove is added; all settings can be
+changed later in *Configure* on the integration.
 
 | Temperature source | Who regulates |
 |---|---|

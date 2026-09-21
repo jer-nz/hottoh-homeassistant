@@ -36,6 +36,18 @@
           "host": "Host name or IP address of the computer running hottoh_api.",
           "port": "HTTP port of hottoh_api (`[http_api] port`)."
         }
+      },
+      "thermostat": {
+        "title": "Thermostat",
+        "description": "Choose the temperature that drives the stove. Leave the sensor empty to use the stove probe (the stove regulates itself). Hysteresis, minimum times and notifications are set afterwards in *Configure*.",
+        "data": {
+          "temperature_sensor": "External temperature sensor",
+          "regulation_mode": "Regulation on the external sensor"
+        },
+        "data_description": {
+          "temperature_sensor": "Any temperature sensor of Home Assistant, in the room to heat.",
+          "regulation_mode": "On/off: Home Assistant turns the stove on and off around the target. Compensated: the stove stays on, its set point is shifted."
+        }
       }
     },
     "error": {

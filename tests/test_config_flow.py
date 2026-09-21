@@ -22,9 +22,15 @@ async def test_user_flow(hass: HomeAssistant, bridge: FakeBridge) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"name": "Poêle", "host": HOST, "port": PORT}
     )
+    assert result["step_id"] == "thermostat"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"temperature_sensor": "sensor.salon", "regulation_mode": "on_off"},
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Poêle"
     assert result["data"] == {"host": HOST, "port": PORT}
+    assert result["result"].options["temperature_sensor"] == "sensor.salon"
     assert result["result"].unique_id == "192.168.1.50:5001"
 
 
@@ -45,7 +51,11 @@ async def test_user_flow_cannot_connect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"name": "Poêle", "host": HOST, "port": PORT}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"regulation_mode": "on_off"}
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].options["temperature_sensor"] is None
 
 
 async def test_user_flow_already_configured(
@@ -79,6 +89,10 @@ async def test_hassio_discovery(hass: HomeAssistant, bridge: FakeBridge) -> None
     assert result["step_id"] == "hassio_confirm"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"name": "Poêle"}
+    )
+    assert result["step_id"] == "thermostat"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"regulation_mode": "on_off"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "1234"

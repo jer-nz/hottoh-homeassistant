@@ -51,6 +51,11 @@ With an external sensor, the chrono mode of the stove is turned off (option), th
 turned on again while it is still stopping, nothing is sent during an alarm, and the regulation
 pauses while the sensor is unavailable. Turning the thermostat off stops the stove at once.
 
+After an alarm (failed ignition, no pellets...), the regulation does not turn the stove on again by
+itself: set the thermostat to heat again, or turn the stove on, once the cause is fixed (a failed
+ignition may leave pellets in the burn pot). The `alarm_hold` attribute of the thermostat tells
+when it waits.
+
 ## Notifications and events
 
 In the second page of the options, choose notify actions (such as `notify.mobile_app_phone`)

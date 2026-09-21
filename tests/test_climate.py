@@ -158,3 +158,28 @@ async def test_restore(hass: HomeAssistant, bridge: FakeBridge) -> None:
     state = hass.states.get("climate.poele")
     assert state.state == HVACMode.HEAT
     assert state.attributes["temperature"] == 21
+
+
+async def test_no_restart_after_alarm(
+    hass: HomeAssistant, bridge: FakeBridge, freezer: FrozenDateTimeFactory
+) -> None:
+    """After an alarm, the stove waits for someone to ask for heat again."""
+    await _room(hass, 18.0)
+    entry = _entry(temperature_sensor=SENSOR, min_on_minutes=0, min_off_minutes=0)
+    await _setup(hass, entry)
+    await _climate(hass, "set_temperature", temperature=20, hvac_mode=HVACMode.HEAT)
+    assert _on_off_writes(bridge) == [True]
+
+    bridge.set_alarm(60, "2026-09-21T10:00:00+02:00")
+    bridge.dat0["index_stove_on"] = False
+    await config_entry_refresh(hass)
+    assert hass.states.get("climate.poele").attributes["alarm_hold"] is True
+    bridge.set_alarm(60, "2026-09-21T10:00:00+02:00", "2026-09-21T10:20:00+02:00")
+    freezer.tick(timedelta(minutes=5))
+    await config_entry_refresh(hass)
+    await _room(hass, 17.0)
+    assert _on_off_writes(bridge) == [True]
+
+    await _climate(hass, "set_hvac_mode", hvac_mode=HVACMode.HEAT)
+    assert _on_off_writes(bridge) == [True, True]
+    assert hass.states.get("climate.poele").attributes["alarm_hold"] is False

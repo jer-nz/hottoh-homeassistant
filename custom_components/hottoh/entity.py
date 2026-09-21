@@ -57,6 +57,7 @@ async def async_write(
             translation_placeholders={"error": str(err)},
         ) from err
     await coordinator.async_refresh()
+    coordinator.async_refresh_after_write()
     return result
 
 

@@ -73,6 +73,7 @@ DEFAULT_TARGET = 20.0
 # retry delay of a takeover write (chrono off, stove set point) that failed
 TAKEOVER_RETRY_S = 300
 ATTR_LAST_SWITCH = "last_switch"
+ATTR_ALARM_HOLD = "alarm_hold"
 
 
 async def async_setup_entry(
@@ -137,6 +138,9 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
         self._last_setpoint_write: float | None = None
         self._last_chrono_write: float | None = None
         self._force_setpoint = True
+        # after an alarm (failed ignition, no pellets...), the stove is not turned on again
+        # until someone asks for heat or turns it on
+        self._alarm_hold = False
         self._lock = asyncio.Lock()
 
     @property
@@ -158,6 +162,7 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
                 parsed := dt_util.parse_datetime(switch)
             ):
                 self._last_switch = parsed.timestamp()
+            self._alarm_hold = bool(last.attributes.get(ATTR_ALARM_HOLD))
         elif self.coordinator.data.dat0.get("index_stove_on"):
             self._hvac_mode = HVACMode.HEAT
         self._update_room_temp(self.hass.states.get(self._sensor))
@@ -231,6 +236,7 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
             return attrs
         attrs["temperature_sensor"] = self._sensor
         attrs["regulation_mode"] = self._mode
+        attrs[ATTR_ALARM_HOLD] = self._alarm_hold
         if self._last_switch is not None:
             attrs[ATTR_LAST_SWITCH] = dt_util.utc_from_timestamp(
                 self._last_switch
@@ -274,6 +280,8 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
         self._hvac_mode = hvac_mode
         self._force_setpoint = True
         self._last_chrono_write = None
+        if hvac_mode == HVACMode.HEAT:
+            self._alarm_hold = False
         self.async_write_ha_state()
         if hvac_mode == HVACMode.OFF:
             if self.dat0.get("index_stove_on"):
@@ -305,7 +313,11 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
         on = bool(data.dat0.get("index_stove_on"))
         if self._stove_on is not None and on != self._stove_on:
             self._last_switch = dt_util.utcnow().timestamp()
+            if on:  # turned on by someone else: the alarm was dealt with
+                self._alarm_hold = False
         self._stove_on = on
+        if self._external and data.state_raw is not None and is_alarm(data.state_raw):
+            self._alarm_hold = True
 
     @callback
     def _async_sensor_changed(self, event: Event[EventStateChangedData]) -> None:
@@ -390,6 +402,7 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
                 )
             if (
                 not stove_on
+                and not self._alarm_hold
                 and state_raw not in STOPPING_STATES
                 and not is_alarm(state_raw)
             ):
@@ -410,7 +423,7 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
             now,
             self._settings,
         )
-        if decision is not None:
+        if decision is False or (decision is True and not self._alarm_hold):
             await self._async_switch(decision)
 
     async def _async_takeover_chrono(self, dat0: dict[str, Any], now: float) -> None:

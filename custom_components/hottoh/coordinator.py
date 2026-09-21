@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HottohClient, HottohError
@@ -18,6 +20,9 @@ if TYPE_CHECKING:
     from .notifier import HottohNotifier
 
 _LOGGER = logging.getLogger(__name__)
+
+# hottoh_api acknowledges a write before it reads the pages again (one cycle, 1 to 3 s)
+REFRESH_AFTER_WRITE_S = 3
 
 
 @dataclass(slots=True)
@@ -65,6 +70,7 @@ class HottohCoordinator(DataUpdateCoordinator[HottohData]):
         self.client = client
         self.features = features
         self.notifier: HottohNotifier | None = None
+        self._unsub_write_refresh: Callable[[], None] | None = None
 
     async def _async_update_data(self) -> HottohData:
         try:
@@ -81,6 +87,26 @@ class HottohCoordinator(DataUpdateCoordinator[HottohData]):
         if self.notifier is not None:
             self.notifier.process(data)
         return data
+
+    @callback
+    def async_refresh_after_write(self) -> None:
+        """Reads the pages again once hottoh_api has polled the stove after a write."""
+        if self._unsub_write_refresh is not None:
+            self._unsub_write_refresh()
+        self._unsub_write_refresh = async_call_later(
+            self.hass, REFRESH_AFTER_WRITE_S, self._async_write_refresh
+        )
+
+    async def _async_write_refresh(self, _now: datetime) -> None:
+        self._unsub_write_refresh = None
+        await self.async_refresh()
+
+    async def async_shutdown(self) -> None:
+        """Cancels a pending refresh."""
+        if self._unsub_write_refresh is not None:
+            self._unsub_write_refresh()
+            self._unsub_write_refresh = None
+        await super().async_shutdown()
 
     def feature(self, name: str) -> bool:
         """Module feature enabled in hottoh_api."""

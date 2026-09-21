@@ -1,0 +1,354 @@
+{
+  "config": {
+    "flow_title": "{addon}",
+    "step": {
+      "user": {
+        "title": "hottoh_api",
+        "description": "Adresse d'une instance [hottoh_api](https://github.com/jer-nz/hottoh_api) en service (son port HTTP, 3000 par défaut).",
+        "data": {
+          "name": "Nom",
+          "host": "Hôte",
+          "port": "Port"
+        },
+        "data_description": {
+          "name": "Nom du poêle dans Home Assistant.",
+          "host": "Nom ou adresse IP de la machine qui fait tourner hottoh_api.",
+          "port": "Port HTTP de hottoh_api (`[http_api] port`)."
+        }
+      },
+      "hassio_confirm": {
+        "title": "Add-on hottoh_api",
+        "description": "Ajouter le poêle servi par l'add-on {addon} ?",
+        "data": {
+          "name": "Nom"
+        },
+        "data_description": {
+          "name": "Nom du poêle dans Home Assistant."
+        }
+      },
+      "reconfigure": {
+        "title": "Nouvelle adresse de hottoh_api",
+        "data": {
+          "host": "Hôte",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Nom ou adresse IP de la machine qui fait tourner hottoh_api.",
+          "port": "Port HTTP de hottoh_api (`[http_api] port`)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "hottoh_api ne répond pas à cette adresse."
+    },
+    "abort": {
+      "already_configured": "Ce poêle est déjà configuré.",
+      "reconfigure_successful": "L'adresse a été mise à jour."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Thermostat",
+        "description": "Sans sonde externe, le thermostat utilise la sonde du poêle et le poêle régule seul. Avec une sonde externe, Home Assistant régule : soit en allumant et en éteignant le poêle autour de la consigne (marche/arrêt), soit en décalant la consigne du poêle de l'écart entre les deux sondes (consigne compensée).",
+        "data": {
+          "temperature_sensor": "Sonde de température externe",
+          "regulation_mode": "Régulation sur la sonde externe",
+          "hysteresis_low": "Allumer sous la consigne de",
+          "hysteresis_high": "Éteindre au-dessus de la consigne de",
+          "min_on_minutes": "Durée minimale de marche",
+          "min_off_minutes": "Durée minimale d'arrêt",
+          "onoff_stove_setpoint": "Consigne du poêle en mode marche/arrêt",
+          "disable_chrono": "Couper le mode chrono du poêle",
+          "sensor_timeout_minutes": "Prévenir quand la sonde est indisponible depuis"
+        },
+        "data_description": {
+          "temperature_sensor": "Laisser vide pour utiliser la sonde du poêle.",
+          "hysteresis_low": "Mode marche/arrêt : le poêle s'allume à consigne moins cette valeur.",
+          "hysteresis_high": "Mode marche/arrêt : le poêle s'éteint à consigne plus cette valeur.",
+          "min_on_minutes": "Mode marche/arrêt : le poêle n'est pas éteint avant ce délai (l'allumage prend environ 15 min).",
+          "min_off_minutes": "Mode marche/arrêt : le poêle n'est pas rallumé avant ce délai (l'extinction prend environ 40 min).",
+          "onoff_stove_setpoint": "Mode marche/arrêt : consigne envoyée au poêle pour que sa propre régulation ne l'arrête pas avant Home Assistant.",
+          "disable_chrono": "Le programme hebdomadaire du poêle contrarierait la régulation de Home Assistant.",
+          "sensor_timeout_minutes": "La régulation se met en pause tant que la sonde est indisponible ; une notification part après ce délai."
+        }
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Chaque événement est aussi émis sur le bus sous le nom `hottoh_event`, pour vos automatisations.",
+        "data": {
+          "notify_services": "Actions de notification",
+          "notify_entities": "Entités de notification",
+          "notify_events": "Événements à notifier",
+          "persistent_notification": "Créer aussi une notification persistante",
+          "connection_lost_minutes": "Liaison perdue au bout de"
+        },
+        "data_description": {
+          "notify_services": "Actions de notification classiques, par exemple notify.mobile_app_telephone.",
+          "notify_entities": "Entités de notification (notify.send_message).",
+          "connection_lost_minutes": "Délai avant de signaler la perte de liaison (le module peut redémarrer seul en 5 min)."
+        }
+      }
+    }
+  },
+  "selector": {
+    "regulation_mode": {
+      "options": {
+        "on_off": "Marche/arrêt autour de la consigne (hystérésis)",
+        "compensated": "Consigne du poêle compensée"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "alarm": "Alarme (granulés, allumage, porte, coupure…)",
+        "alarm_cleared": "Fin d'alarme",
+        "connection_lost": "Liaison perdue",
+        "connection_restored": "Liaison rétablie",
+        "write_failed": "Commande refusée",
+        "sensor_unavailable": "Sonde externe indisponible"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Liaison avec le poêle"
+      },
+      "running": {
+        "name": "En marche"
+      },
+      "alarm": {
+        "name": "Alarme"
+      }
+    },
+    "button": {
+      "sync_clock": {
+        "name": "Mettre le poêle à l'heure"
+      }
+    },
+    "number": {
+      "power_setpoint": {
+        "name": "Niveau de puissance"
+      },
+      "ambiance_2_setpoint": {
+        "name": "Consigne pièce 2"
+      },
+      "fan_setpoint": {
+        "name": "Ventilateur {fan}"
+      },
+      "program_temperature": {
+        "name": "Température du programme chrono {program}"
+      }
+    },
+    "sensor": {
+      "room_temperature": {
+        "name": "Température ambiante"
+      },
+      "room_temperature_2": {
+        "name": "Température ambiante 2"
+      },
+      "room_temperature_3": {
+        "name": "Température ambiante 3"
+      },
+      "water_temperature": {
+        "name": "Température de l'eau"
+      },
+      "boiler_temperature": {
+        "name": "Température chaudière"
+      },
+      "dhw_temperature": {
+        "name": "Température eau chaude sanitaire"
+      },
+      "smoke_temperature": {
+        "name": "Température des fumées"
+      },
+      "power_level": {
+        "name": "Puissance"
+      },
+      "smoke_fan": {
+        "name": "Extracteur de fumées"
+      },
+      "fan_speed": {
+        "name": "Vitesse du ventilateur {fan}"
+      },
+      "wifi_signal": {
+        "name": "Signal Wi-Fi"
+      },
+      "state": {
+        "name": "État",
+        "state": {
+          "off": "Éteint",
+          "starting_1": "Allumage (1)",
+          "starting_2": "Allumage (2)",
+          "starting_3": "Allumage (3)",
+          "starting_4": "Allumage (4)",
+          "starting_5": "Allumage (5)",
+          "starting_6": "Allumage (6)",
+          "starting_7": "Allumage (7)",
+          "power": "En chauffe",
+          "stopping_1": "Extinction (1)",
+          "stopping_2": "Extinction (2)",
+          "eco_stop_1": "Arrêt éco (1)",
+          "eco_stop_2": "Arrêt éco (2)",
+          "eco_stop_3": "Arrêt éco (3)",
+          "low_pellet": "Réserve de granulés basse",
+          "end_pellet": "Granulés épuisés",
+          "black_out": "Coupure de courant",
+          "anti_freeze": "Hors-gel",
+          "ignition_failed": "Échec d'allumage",
+          "no_pellet": "Plus de granulés",
+          "cover_open": "Porte ouverte",
+          "unknown": "Inconnu"
+        }
+      },
+      "last_alarm": {
+        "name": "Dernière alarme",
+        "state": {
+          "off": "Éteint",
+          "starting_1": "Allumage (1)",
+          "starting_2": "Allumage (2)",
+          "starting_3": "Allumage (3)",
+          "starting_4": "Allumage (4)",
+          "starting_5": "Allumage (5)",
+          "starting_6": "Allumage (6)",
+          "starting_7": "Allumage (7)",
+          "power": "En chauffe",
+          "stopping_1": "Extinction (1)",
+          "stopping_2": "Extinction (2)",
+          "eco_stop_1": "Arrêt éco (1)",
+          "eco_stop_2": "Arrêt éco (2)",
+          "eco_stop_3": "Arrêt éco (3)",
+          "low_pellet": "Réserve de granulés basse",
+          "end_pellet": "Granulés épuisés",
+          "black_out": "Coupure de courant",
+          "anti_freeze": "Hors-gel",
+          "ignition_failed": "Échec d'allumage",
+          "no_pellet": "Plus de granulés",
+          "cover_open": "Porte ouverte",
+          "unknown": "Inconnu"
+        }
+      }
+    },
+    "switch": {
+      "eco_mode": {
+        "name": "Mode éco"
+      },
+      "chrono_mode": {
+        "name": "Mode chrono"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware du module"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Lecture de hottoh_api impossible : {error}"
+    },
+    "cannot_connect": {
+      "message": "hottoh_api injoignable : {error}"
+    },
+    "write_failed": {
+      "message": "Le poêle a refusé la commande : {error}"
+    },
+    "no_target": {
+      "message": "Choisissez un poêle HottoH chargé (appareil ou entité)."
+    }
+  },
+  "services": {
+    "set_power_level": {
+      "name": "Régler la puissance",
+      "description": "Règle la consigne de puissance du poêle.",
+      "fields": {
+        "level": {
+          "name": "Niveau",
+          "description": "De la puissance minimale à la maximale du poêle (souvent 1 à 10)."
+        }
+      }
+    },
+    "set_eco_mode": {
+      "name": "Régler le mode éco",
+      "description": "Active ou désactive le mode éco.",
+      "fields": {
+        "enabled": {
+          "name": "Activé",
+          "description": ""
+        }
+      }
+    },
+    "set_chrono_mode": {
+      "name": "Régler le mode chrono",
+      "description": "Active ou désactive le programme hebdomadaire du poêle.",
+      "fields": {
+        "enabled": {
+          "name": "Activé",
+          "description": ""
+        }
+      }
+    },
+    "set_fan_speed": {
+      "name": "Régler un ventilateur",
+      "description": "Règle la consigne d'un ventilateur.",
+      "fields": {
+        "fan": {
+          "name": "Ventilateur",
+          "description": "Ventilateur 1 à 3."
+        },
+        "speed": {
+          "name": "Vitesse",
+          "description": "De 0 au maximum du ventilateur."
+        }
+      }
+    },
+    "set_ambiance_temperature": {
+      "name": "Régler la consigne du poêle",
+      "description": "Écrit la consigne ambiante du poêle lui-même (pas la cible d'une régulation externe).",
+      "fields": {
+        "ambiance": {
+          "name": "Pièce",
+          "description": "Pièce 1 ou 2."
+        },
+        "temperature": {
+          "name": "Température",
+          "description": "En °C, dixièmes acceptés."
+        }
+      }
+    },
+    "set_chrono_temperature": {
+      "name": "Régler un programme chrono",
+      "description": "Température d'un programme chrono.",
+      "fields": {
+        "program": {
+          "name": "Programme",
+          "description": "Programme 1 à 3."
+        },
+        "temperature": {
+          "name": "Température",
+          "description": "En °C."
+        }
+      }
+    },
+    "set_schedule": {
+      "name": "Régler le programme hebdomadaire",
+      "description": "Remplace le programme des jours donnés (créneaux d'une demi-heure, programme 0 à 3). Les autres jours sont conservés.",
+      "fields": {
+        "days": {
+          "name": "Jours",
+          "description": "Liste de jours, chacun avec `day` (sunday à saturday) et `ranges` ({start, end, program}) ou 48 `slots`."
+        }
+      }
+    },
+    "sync_clock": {
+      "name": "Mettre le poêle à l'heure",
+      "description": "Règle l'horloge du module et du poêle sur celle de la machine qui fait tourner hottoh_api.",
+      "fields": {}
+    },
+    "restart_module": {
+      "name": "Redémarrer le module Wi-Fi",
+      "description": "Redémarre le module Wi-Fi du poêle (données indisponibles environ 15 s).",
+      "fields": {}
+    }
+  }
+}

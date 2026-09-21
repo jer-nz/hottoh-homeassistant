@@ -1,0 +1,14 @@
+{
+    "index_page": 1,
+    "index_chrono_mode": 0,
+    "index_program_1_temp": 21.0,
+    "index_program_1_temp_min": 5.0,
+    "index_program_1_temp_max": 35.0,
+    "index_program_2_temp": 20.5,
+    "index_program_2_temp_min": 5.0,
+    "index_program_2_temp_max": 35.0,
+    "index_program_3_temp": 23.0,
+    "index_program_3_temp_min": 5.0,
+    "index_program_3_temp_max": 35.0,
+    "last_updated": "2026-09-21T22:07:16+02:00"
+}

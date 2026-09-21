@@ -1,0 +1,111 @@
+.target: &target
+  device:
+    integration: hottoh
+  entity:
+    integration: hottoh
+
+set_power_level:
+  target: *target
+  fields:
+    level:
+      required: true
+      example: 5
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: slider
+
+set_eco_mode:
+  target: *target
+  fields:
+    enabled:
+      required: true
+      selector:
+        boolean:
+
+set_chrono_mode:
+  target: *target
+  fields:
+    enabled:
+      required: true
+      selector:
+        boolean:
+
+set_fan_speed:
+  target: *target
+  fields:
+    fan:
+      required: true
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 3
+          mode: box
+    speed:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 101
+          mode: box
+
+set_ambiance_temperature:
+  target: *target
+  fields:
+    ambiance:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 2
+          mode: box
+    temperature:
+      required: true
+      example: 21.5
+      selector:
+        number:
+          min: 5
+          max: 55
+          step: 0.1
+          unit_of_measurement: "°C"
+          mode: box
+
+set_chrono_temperature:
+  target: *target
+  fields:
+    program:
+      required: true
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 3
+          mode: box
+    temperature:
+      required: true
+      example: 20
+      selector:
+        number:
+          min: 5
+          max: 35
+          step: 0.1
+          unit_of_measurement: "°C"
+          mode: box
+
+set_schedule:
+  target: *target
+  fields:
+    days:
+      required: true
+      example: >-
+        [{"day": "monday", "ranges": [{"start": "06:30", "end": "08:00", "program": 1}]}]
+      selector:
+        object:
+
+sync_clock:
+  target: *target
+
+restart_module:
+  target: *target

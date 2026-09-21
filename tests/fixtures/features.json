@@ -1,0 +1,16 @@
+{
+    "chrono_schedule_read": true,
+    "chrono_schedule_write": true,
+    "clock_read": true,
+    "clock_write": true,
+    "timezone_read": true,
+    "timezone_write": false,
+    "datalog_read": true,
+    "datalog_clear": false,
+    "pin_read": false,
+    "pin_write": true,
+    "module_restart": true,
+    "wifi_scan": true,
+    "cloud_read": true,
+    "firmware_update_check": true
+}

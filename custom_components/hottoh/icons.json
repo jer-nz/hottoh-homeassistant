@@ -1,0 +1,38 @@
+{
+  "entity": {
+    "sensor": {
+      "state": { "default": "mdi:fireplace" },
+      "power_level": { "default": "mdi:fire" },
+      "smoke_fan": { "default": "mdi:fan" },
+      "fan_speed": { "default": "mdi:fan" },
+      "last_alarm": { "default": "mdi:alert-outline" },
+      "wifi_signal": { "default": "mdi:wifi" }
+    },
+    "binary_sensor": {
+      "running": { "default": "mdi:fireplace-off", "state": { "on": "mdi:fireplace" } }
+    },
+    "number": {
+      "power_setpoint": { "default": "mdi:fire" },
+      "fan_setpoint": { "default": "mdi:fan" },
+      "program_temperature": { "default": "mdi:calendar-clock" }
+    },
+    "switch": {
+      "eco_mode": { "default": "mdi:leaf" },
+      "chrono_mode": { "default": "mdi:calendar-clock" }
+    },
+    "button": {
+      "sync_clock": { "default": "mdi:clock-check-outline" }
+    }
+  },
+  "services": {
+    "set_power_level": { "service": "mdi:fire" },
+    "set_eco_mode": { "service": "mdi:leaf" },
+    "set_chrono_mode": { "service": "mdi:calendar-clock" },
+    "set_fan_speed": { "service": "mdi:fan" },
+    "set_ambiance_temperature": { "service": "mdi:thermometer" },
+    "set_chrono_temperature": { "service": "mdi:thermometer-lines" },
+    "set_schedule": { "service": "mdi:calendar-week" },
+    "sync_clock": { "service": "mdi:clock-check-outline" },
+    "restart_module": { "service": "mdi:restart" }
+  }
+}

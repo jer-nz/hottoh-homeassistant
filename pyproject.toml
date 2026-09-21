@@ -1,0 +1,32 @@
+[project]
+name = "hottoh-homeassistant"
+version = "0.1.0"
+description = "Home Assistant integration for HottoH pellet stoves, through hottoh_api"
+requires-python = ">=3.14"
+license = "MIT"
+
+[dependency-groups]
+test = [
+    "pytest-homeassistant-custom-component==0.13.366",
+    "ruff",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "ASYNC"]
+ignore = ["E501", "RUF012"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+known-first-party = ["custom_components.hottoh"]
+known-third-party = ["homeassistant"]
+combine-as-imports = true
+split-on-trailing-comma = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]

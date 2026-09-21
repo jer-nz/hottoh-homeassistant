@@ -1,0 +1,37 @@
+{
+    "stove_address": "192.168.1.50:5001",
+    "connected": true,
+    "last_response_at": "2026-09-21T22:07:17+02:00",
+    "last_error": null,
+    "last_error_at": null,
+    "connected_since": "2026-09-21T08:57:40+02:00",
+    "connections": 3,
+    "stats": {
+        "requests": 990442,
+        "answers": 990435,
+        "timeouts": 6,
+        "invalid_frames": 0,
+        "late_answers": 0,
+        "decode_errors": 0,
+        "writes_ok": 0,
+        "writes_refused": 0,
+        "writes_failed": 0,
+        "reads_ok": 5,
+        "reads_refused": 0,
+        "reads_failed": 0,
+        "disconnections": 2,
+        "connect_failures": 619,
+        "latency_total_ms": 199872268,
+        "latency_max_ms": 2547,
+        "latency_last_ms": 232
+    },
+    "pending_writes": 0,
+    "started_at": "2026-09-16T12:40:38+02:00",
+    "uptime_s": 466000,
+    "version": "2.3.0",
+    "process": {
+        "rss_kb": 10108,
+        "threads": 7,
+        "open_fds": 24
+    }
+}

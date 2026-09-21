@@ -1,0 +1,354 @@
+{
+  "config": {
+    "flow_title": "{addon}",
+    "step": {
+      "user": {
+        "title": "hottoh_api",
+        "description": "Address of a running [hottoh_api](https://github.com/jer-nz/hottoh_api) instance (its HTTP port, 3000 by default).",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "name": "Name of the stove in Home Assistant.",
+          "host": "Host name or IP address of the computer running hottoh_api.",
+          "port": "HTTP port of hottoh_api (`[http_api] port`)."
+        }
+      },
+      "hassio_confirm": {
+        "title": "hottoh_api add-on",
+        "description": "Add the stove served by the {addon} add-on?",
+        "data": {
+          "name": "Name"
+        },
+        "data_description": {
+          "name": "Name of the stove in Home Assistant."
+        }
+      },
+      "reconfigure": {
+        "title": "New address of hottoh_api",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Host name or IP address of the computer running hottoh_api.",
+          "port": "HTTP port of hottoh_api (`[http_api] port`)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach hottoh_api at this address."
+    },
+    "abort": {
+      "already_configured": "This stove is already configured.",
+      "reconfigure_successful": "The address was updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Thermostat",
+        "description": "With no external sensor, the thermostat uses the stove probe and the stove regulates itself. With an external sensor, Home Assistant regulates: either by turning the stove on and off around the target (on/off), or by shifting the stove set point by the difference between both probes (compensated).",
+        "data": {
+          "temperature_sensor": "External temperature sensor",
+          "regulation_mode": "Regulation on the external sensor",
+          "hysteresis_low": "Turn on below the target by",
+          "hysteresis_high": "Turn off above the target by",
+          "min_on_minutes": "Minimum running time",
+          "min_off_minutes": "Minimum stop time",
+          "onoff_stove_setpoint": "Stove set point in on/off mode",
+          "disable_chrono": "Disable the chrono mode of the stove",
+          "sensor_timeout_minutes": "Warn when the sensor is unavailable for"
+        },
+        "data_description": {
+          "temperature_sensor": "Leave empty to use the stove probe.",
+          "hysteresis_low": "On/off mode: the stove is turned on at target minus this value.",
+          "hysteresis_high": "On/off mode: the stove is turned off at target plus this value.",
+          "min_on_minutes": "On/off mode: the stove is not turned off before this time (ignition takes about 15 min).",
+          "min_off_minutes": "On/off mode: the stove is not turned on again before this time (shutdown takes about 40 min).",
+          "onoff_stove_setpoint": "On/off mode: set point sent to the stove so that its own regulation does not stop it before Home Assistant does.",
+          "disable_chrono": "The weekly schedule of the stove would fight the regulation of Home Assistant.",
+          "sensor_timeout_minutes": "The regulation pauses while the sensor is unavailable; a notification is sent after this time."
+        }
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Every event is also fired on the event bus as `hottoh_event`, for your automations.",
+        "data": {
+          "notify_services": "Notify actions",
+          "notify_entities": "Notify entities",
+          "notify_events": "Events to notify",
+          "persistent_notification": "Also create a persistent notification",
+          "connection_lost_minutes": "Connection lost after"
+        },
+        "data_description": {
+          "notify_services": "Legacy notify actions, such as notify.mobile_app_phone.",
+          "notify_entities": "Notify entities (notify.send_message).",
+          "connection_lost_minutes": "Delay before a lost stove link is notified (the module may reboot on its own in 5 min)."
+        }
+      }
+    }
+  },
+  "selector": {
+    "regulation_mode": {
+      "options": {
+        "on_off": "On/off around the target (hysteresis)",
+        "compensated": "Compensated stove set point"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "alarm": "Alarm (pellets, ignition, door, power cut...)",
+        "alarm_cleared": "Alarm cleared",
+        "connection_lost": "Connection lost",
+        "connection_restored": "Connection restored",
+        "write_failed": "Command refused",
+        "sensor_unavailable": "External sensor unavailable"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Stove link"
+      },
+      "running": {
+        "name": "Running"
+      },
+      "alarm": {
+        "name": "Alarm"
+      }
+    },
+    "button": {
+      "sync_clock": {
+        "name": "Set the stove clock"
+      }
+    },
+    "number": {
+      "power_setpoint": {
+        "name": "Power level"
+      },
+      "ambiance_2_setpoint": {
+        "name": "Room 2 set point"
+      },
+      "fan_setpoint": {
+        "name": "Fan {fan}"
+      },
+      "program_temperature": {
+        "name": "Chrono program {program} temperature"
+      }
+    },
+    "sensor": {
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "room_temperature_2": {
+        "name": "Room temperature 2"
+      },
+      "room_temperature_3": {
+        "name": "Room temperature 3"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      },
+      "boiler_temperature": {
+        "name": "Boiler temperature"
+      },
+      "dhw_temperature": {
+        "name": "Domestic hot water temperature"
+      },
+      "smoke_temperature": {
+        "name": "Smoke temperature"
+      },
+      "power_level": {
+        "name": "Power"
+      },
+      "smoke_fan": {
+        "name": "Smoke fan"
+      },
+      "fan_speed": {
+        "name": "Fan {fan} speed"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "state": {
+        "name": "State",
+        "state": {
+          "off": "Off",
+          "starting_1": "Starting (1)",
+          "starting_2": "Starting (2)",
+          "starting_3": "Starting (3)",
+          "starting_4": "Starting (4)",
+          "starting_5": "Starting (5)",
+          "starting_6": "Starting (6)",
+          "starting_7": "Starting (7)",
+          "power": "Heating",
+          "stopping_1": "Stopping (1)",
+          "stopping_2": "Stopping (2)",
+          "eco_stop_1": "Eco stop (1)",
+          "eco_stop_2": "Eco stop (2)",
+          "eco_stop_3": "Eco stop (3)",
+          "low_pellet": "Low pellet level",
+          "end_pellet": "Out of pellets",
+          "black_out": "Power cut",
+          "anti_freeze": "Anti-freeze",
+          "ignition_failed": "Ignition failed",
+          "no_pellet": "No pellets",
+          "cover_open": "Door open",
+          "unknown": "Unknown"
+        }
+      },
+      "last_alarm": {
+        "name": "Last alarm",
+        "state": {
+          "off": "Off",
+          "starting_1": "Starting (1)",
+          "starting_2": "Starting (2)",
+          "starting_3": "Starting (3)",
+          "starting_4": "Starting (4)",
+          "starting_5": "Starting (5)",
+          "starting_6": "Starting (6)",
+          "starting_7": "Starting (7)",
+          "power": "Heating",
+          "stopping_1": "Stopping (1)",
+          "stopping_2": "Stopping (2)",
+          "eco_stop_1": "Eco stop (1)",
+          "eco_stop_2": "Eco stop (2)",
+          "eco_stop_3": "Eco stop (3)",
+          "low_pellet": "Low pellet level",
+          "end_pellet": "Out of pellets",
+          "black_out": "Power cut",
+          "anti_freeze": "Anti-freeze",
+          "ignition_failed": "Ignition failed",
+          "no_pellet": "No pellets",
+          "cover_open": "Door open",
+          "unknown": "Unknown"
+        }
+      }
+    },
+    "switch": {
+      "eco_mode": {
+        "name": "Eco mode"
+      },
+      "chrono_mode": {
+        "name": "Chrono mode"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Module firmware"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Cannot read hottoh_api: {error}"
+    },
+    "cannot_connect": {
+      "message": "Cannot reach hottoh_api: {error}"
+    },
+    "write_failed": {
+      "message": "The stove refused the command: {error}"
+    },
+    "no_target": {
+      "message": "Choose a HottoH stove (device or entity) that is loaded."
+    }
+  },
+  "services": {
+    "set_power_level": {
+      "name": "Set power level",
+      "description": "Sets the power level set point of the stove.",
+      "fields": {
+        "level": {
+          "name": "Level",
+          "description": "From the minimum to the maximum power of the stove (often 1 to 10)."
+        }
+      }
+    },
+    "set_eco_mode": {
+      "name": "Set eco mode",
+      "description": "Enables or disables the eco mode.",
+      "fields": {
+        "enabled": {
+          "name": "Enabled",
+          "description": ""
+        }
+      }
+    },
+    "set_chrono_mode": {
+      "name": "Set chrono mode",
+      "description": "Enables or disables the weekly schedule of the stove.",
+      "fields": {
+        "enabled": {
+          "name": "Enabled",
+          "description": ""
+        }
+      }
+    },
+    "set_fan_speed": {
+      "name": "Set fan speed",
+      "description": "Sets the set point of a fan.",
+      "fields": {
+        "fan": {
+          "name": "Fan",
+          "description": "Fan 1 to 3."
+        },
+        "speed": {
+          "name": "Speed",
+          "description": "0 to the maximum of the fan."
+        }
+      }
+    },
+    "set_ambiance_temperature": {
+      "name": "Set stove set point",
+      "description": "Writes the room set point of the stove itself (not the target of an external regulation).",
+      "fields": {
+        "ambiance": {
+          "name": "Room",
+          "description": "Room 1 or 2."
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "In °C, tenths accepted."
+        }
+      }
+    },
+    "set_chrono_temperature": {
+      "name": "Set chrono program temperature",
+      "description": "Temperature of a chrono program.",
+      "fields": {
+        "program": {
+          "name": "Program",
+          "description": "Program 1 to 3."
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "In °C."
+        }
+      }
+    },
+    "set_schedule": {
+      "name": "Set weekly schedule",
+      "description": "Replaces the schedule of the given days (half-hour slots, program 0 to 3). Days left out keep their schedule.",
+      "fields": {
+        "days": {
+          "name": "Days",
+          "description": "List of days, each with `day` (sunday to saturday) and `ranges` ({start, end, program}) or 48 `slots`."
+        }
+      }
+    },
+    "sync_clock": {
+      "name": "Set the stove clock",
+      "description": "Sets the module and stove clocks from the clock of the computer running hottoh_api.",
+      "fields": {}
+    },
+    "restart_module": {
+      "name": "Restart the Wi-Fi module",
+      "description": "Restarts the Wi-Fi module of the stove (data unavailable for about 15 s).",
+      "fields": {}
+    }
+  }
+}

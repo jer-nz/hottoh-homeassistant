@@ -136,6 +136,13 @@ hottoh_api test.ini                                    # [stove] ip = 127.0.0.1
 curl -X POST localhost:5080/ -d '{"alarm": 61}'        # no pellets
 ```
 
+## Disclaimer
+
+This project is independent. It is not affiliated with, endorsed by or supported by HottoH,
+Astrel Group, 4-Noks or any stove manufacturer. Their names are only used to describe the
+hardware this project works with; all trademarks belong to their owners. No logo of these
+companies is used.
+
 ## License
 
 MIT

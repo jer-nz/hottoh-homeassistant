@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Final
 
 DOMAIN: Final = "hottoh"
-MANUFACTURER: Final = "HottoH"
-MODEL: Final = "Wifier 2.0"
+# Device model: the Wi-Fi module of the stove, reached through hottoh_api (not affiliated with
+# the module or stove makers, whose names are only used to describe compatibility)
+MODEL: Final = "Wi-Fi module (hottoh_api)"
 
 DEFAULT_PORT: Final = 3000
 DEFAULT_SCAN_INTERVAL: Final = 10

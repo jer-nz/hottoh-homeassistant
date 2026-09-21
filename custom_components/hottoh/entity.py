@@ -10,7 +10,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import HottohClient, HottohError, HottohWriteError, WriteResult
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN, MODEL
 from .coordinator import HottohCoordinator
 
 if TYPE_CHECKING:
@@ -20,13 +20,12 @@ if TYPE_CHECKING:
 def device_info(entry: HottohConfigEntry, coordinator: HottohCoordinator) -> DeviceInfo:
     """Device of a config entry: one stove behind one hottoh_api instance."""
     data = coordinator.data
+    # stove brand as reported by the stove board ("Cmg"...), not the module maker
     manufacturer = data.dat0.get("index_manufacturer") if data else None
     return DeviceInfo(
         identifiers={(DOMAIN, entry.entry_id)},
         name=entry.title,
-        manufacturer=MANUFACTURER
-        if manufacturer is None
-        else f"{MANUFACTURER} ({manufacturer})",
+        manufacturer=str(manufacturer) if manufacturer is not None else None,
         model=MODEL,
         sw_version=data.inf.get("version") if data else None,
         hw_version=f"hottoh_api {data.status.get('version')}" if data else None,

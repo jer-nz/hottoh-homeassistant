@@ -117,7 +117,8 @@
         "connection_lost": "Connection lost",
         "connection_restored": "Connection restored",
         "write_failed": "Command refused",
-        "sensor_unavailable": "External sensor unavailable"
+        "sensor_unavailable": "External sensor unavailable",
+        "setpoint_changed": "Set point changed on the stove"
       }
     }
   },

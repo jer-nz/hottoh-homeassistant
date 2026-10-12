@@ -117,7 +117,8 @@
         "connection_lost": "Liaison perdue",
         "connection_restored": "Liaison rétablie",
         "write_failed": "Commande refusée",
-        "sensor_unavailable": "Sonde externe indisponible"
+        "sensor_unavailable": "Sonde externe indisponible",
+        "setpoint_changed": "Consigne changée sur le poêle"
       }
     }
   },

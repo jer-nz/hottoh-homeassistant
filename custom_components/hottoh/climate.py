@@ -27,6 +27,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    COMPENSATION_MIN_DELTA,
     CONF_DISABLE_CHRONO,
     CONF_HYSTERESIS_HIGH,
     CONF_HYSTERESIS_LOW,
@@ -43,6 +44,7 @@ from .const import (
     DEFAULT_ONOFF_STOVE_SETPOINT,
     DEFAULT_SENSOR_TIMEOUT_MINUTES,
     EVENT_SENSOR_UNAVAILABLE,
+    EVENT_SETPOINT_CHANGED,
     REGULATION_COMPENSATED,
     REGULATION_ON_OFF,
     STARTING_STATES,
@@ -72,6 +74,10 @@ EXTERNAL_MAX_TEMP = 35.0
 DEFAULT_TARGET = 20.0
 # retry delay of a takeover write (chrono off, stove set point) that failed
 TAKEOVER_RETRY_S = 300
+# the stove applies a set point a few seconds after its `OK`: a different value seen sooner is
+# the old one, not a change made on the stove
+SETPOINT_SETTLE_S = 15
+SETPOINT_TOLERANCE = 0.05
 ATTR_LAST_SWITCH = "last_switch"
 ATTR_ALARM_HOLD = "alarm_hold"
 
@@ -136,6 +142,9 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
         self._last_switch: float | None = None
         self._stove_on: bool | None = None
         self._last_setpoint_write: float | None = None
+        # stove set point last written by Home Assistant, or first seen: any other value was
+        # set on the control panel of the stove (or by another app) and becomes the target
+        self._expected_setpoint: float | None = None
         self._last_chrono_write: float | None = None
         self._force_setpoint = True
         # after an alarm (failed ignition, no pellets...), the stove is not turned on again
@@ -318,6 +327,52 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
         self._stove_on = on
         if self._external and data.state_raw is not None and is_alarm(data.state_raw):
             self._alarm_hold = True
+        if self._external:
+            self._observe_setpoint(data.dat0)
+
+    @callback
+    def _observe_setpoint(self, dat0: dict[str, Any]) -> None:
+        """Adopts a set point changed on the stove instead of writing over it.
+
+        Compensated: the target moves by the same amount. On/off: the stove set point is
+        meaningless to the person at the stove, the value becomes the target and the stove set
+        point is written again (the stove would otherwise stop before the room is warm).
+        """
+        if (raw := dat0.get("index_ambient_t1_set")) is None or self._lock.locked():
+            return
+        value = float(raw)
+        expected = self._expected_setpoint
+        if expected is None:
+            self._expected_setpoint = value
+            return
+        if abs(value - expected) < SETPOINT_TOLERANCE:
+            return
+        now = dt_util.utcnow().timestamp()
+        if (
+            self._last_setpoint_write is not None
+            and now - self._last_setpoint_write < SETPOINT_SETTLE_S
+        ):
+            return
+        if self._mode == REGULATION_COMPENSATED:
+            target = self._target + (value - expected)
+        else:
+            target = value
+            self._force_setpoint = True
+        target = round(min(max(target, EXTERNAL_MIN_TEMP), EXTERNAL_MAX_TEMP), 1)
+        _LOGGER.info(
+            "%s: stove set point changed on the stove (%s -> %s), target %s -> %s",
+            self.entity_id,
+            expected,
+            value,
+            self._target,
+            target,
+        )
+        self._expected_setpoint = value
+        self._target = target
+        if (notifier := self.coordinator.notifier) is not None:
+            notifier.emit(
+                EVENT_SETPOINT_CHANGED, stove_setpoint=str(value), target=str(target)
+            )
 
     @callback
     def _async_sensor_changed(self, event: Event[EventStateChangedData]) -> None:
@@ -447,13 +502,21 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
         if not should_write_setpoint(
             value, current, self._last_setpoint_write, now, self._force_setpoint
         ):
+            if abs(value - current) < COMPENSATION_MIN_DELTA:
+                # already there: a forced write is not owed any more
+                self._force_setpoint = False
             return
         self._force_setpoint = False
         self._last_setpoint_write = now
+        self._expected_setpoint = value
         _LOGGER.debug("%s: stove set point %s -> %s", self.entity_id, current, value)
-        await async_write(
-            self.coordinator, self.client.set_ambiance_temperature(1, value)
-        )
+        try:
+            await async_write(
+                self.coordinator, self.client.set_ambiance_temperature(1, value)
+            )
+        except HomeAssistantError:
+            self._expected_setpoint = current
+            raise
 
     async def _async_switch(self, on: bool) -> None:
         _LOGGER.info(

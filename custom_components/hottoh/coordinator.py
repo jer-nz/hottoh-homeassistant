@@ -21,8 +21,9 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-# hottoh_api acknowledges a write before it reads the pages again (one cycle, 1 to 3 s)
-REFRESH_AFTER_WRITE_S = 3
+# hottoh_api acknowledges a write before it reads the pages again (one cycle, 1 to 3 s), and
+# the stove board applies some values (power level) only 3 to 5 s after its `OK`: read twice
+REFRESH_AFTER_WRITE_S = (3, 7)
 
 
 @dataclass(slots=True)
@@ -70,7 +71,7 @@ class HottohCoordinator(DataUpdateCoordinator[HottohData]):
         self.client = client
         self.features = features
         self.notifier: HottohNotifier | None = None
-        self._unsub_write_refresh: Callable[[], None] | None = None
+        self._unsub_write_refresh: list[Callable[[], None]] = []
 
     async def _async_update_data(self) -> HottohData:
         try:
@@ -91,21 +92,24 @@ class HottohCoordinator(DataUpdateCoordinator[HottohData]):
     @callback
     def async_refresh_after_write(self) -> None:
         """Reads the pages again once hottoh_api has polled the stove after a write."""
-        if self._unsub_write_refresh is not None:
-            self._unsub_write_refresh()
-        self._unsub_write_refresh = async_call_later(
-            self.hass, REFRESH_AFTER_WRITE_S, self._async_write_refresh
-        )
+        self._cancel_write_refresh()
+        self._unsub_write_refresh = [
+            async_call_later(self.hass, delay, self._async_write_refresh)
+            for delay in REFRESH_AFTER_WRITE_S
+        ]
 
     async def _async_write_refresh(self, _now: datetime) -> None:
-        self._unsub_write_refresh = None
         await self.async_refresh()
+
+    @callback
+    def _cancel_write_refresh(self) -> None:
+        for unsub in self._unsub_write_refresh:
+            unsub()
+        self._unsub_write_refresh = []
 
     async def async_shutdown(self) -> None:
         """Cancels a pending refresh."""
-        if self._unsub_write_refresh is not None:
-            self._unsub_write_refresh()
-            self._unsub_write_refresh = None
+        self._cancel_write_refresh()
         await super().async_shutdown()
 
     def feature(self, name: str) -> bool:

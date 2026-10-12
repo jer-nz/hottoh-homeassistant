@@ -50,6 +50,7 @@ EVENT_CONNECTION_LOST: Final = "connection_lost"
 EVENT_CONNECTION_RESTORED: Final = "connection_restored"
 EVENT_WRITE_FAILED: Final = "write_failed"
 EVENT_SENSOR_UNAVAILABLE: Final = "sensor_unavailable"
+EVENT_SETPOINT_CHANGED: Final = "setpoint_changed"
 NOTIFY_EVENTS: Final = [
     EVENT_ALARM,
     EVENT_ALARM_CLEARED,
@@ -57,6 +58,7 @@ NOTIFY_EVENTS: Final = [
     EVENT_CONNECTION_RESTORED,
     EVENT_WRITE_FAILED,
     EVENT_SENSOR_UNAVAILABLE,
+    EVENT_SETPOINT_CHANGED,
 ]
 DEFAULT_NOTIFY_EVENTS: Final = [
     EVENT_ALARM,

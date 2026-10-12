@@ -54,6 +54,10 @@ With an external sensor, the chrono mode of the stove is turned off (option), th
 turned on again while it is still stopping, nothing is sent during an alarm, and the regulation
 pauses while the sensor is unavailable. Turning the thermostat off stops the stove at once.
 
+A set point changed on the control panel of the stove (or in another app) is not written over:
+in compensated mode the target moves by the same amount, in on/off mode the value becomes the
+target and the stove set point is raised again.
+
 After an alarm (failed ignition, no pellets...), the regulation does not turn the stove on again by
 itself: set the thermostat to heat again, or turn the stove on, once the cause is fixed (a failed
 ignition may leave pellets in the burn pot). The `alarm_hold` attribute of the thermostat tells
@@ -84,6 +88,7 @@ actions:
 | `connection_lost`, `connection_restored` | `minutes`, `detail` |
 | `write_failed` | `detail` |
 | `sensor_unavailable` | `entity_id`, `minutes` |
+| `setpoint_changed` | `stove_setpoint`, `target`: set point changed on the stove, new target |
 
 All events carry `entry_id` and `device_id`.
 
@@ -100,7 +105,7 @@ it (`response_variable`); a refused write raises an error.
 | `hottoh.set_ambiance_temperature` | `ambiance` (1-2), `temperature`: the stove set point itself |
 | `hottoh.set_chrono_temperature` | `program` (1-3), `temperature` |
 | `hottoh.set_schedule` | `days`: see below |
-| `hottoh.sync_clock` | sets the stove clock (hottoh_api feature `clock_write`) |
+| `hottoh.sync_clock` | sets the stove clock (hottoh_api feature `clock_write`); hottoh_api sends it at the start of the next minute, up to 60 s later |
 | `hottoh.restart_module` | restarts the Wi-Fi module (feature `module_restart`) |
 
 ```yaml

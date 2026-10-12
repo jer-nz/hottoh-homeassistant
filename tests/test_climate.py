@@ -183,3 +183,58 @@ async def test_no_restart_after_alarm(
     await _climate(hass, "set_hvac_mode", hvac_mode=HVACMode.HEAT)
     assert _on_off_writes(bridge) == [True, True]
     assert hass.states.get("climate.poele").attributes["alarm_hold"] is False
+
+
+async def test_setpoint_changed_on_the_stove(
+    hass: HomeAssistant, bridge: FakeBridge, freezer: FrozenDateTimeFactory
+) -> None:
+    """Compensated: a set point lowered on the stove lowers the target, not written over."""
+    events = []
+    hass.bus.async_listen("hottoh_event", events.append)
+    bridge.dat0["index_ambient_t1"] = 23.0
+    await _room(hass, 19.0)
+    await _setup(hass, _entry(temperature_sensor=SENSOR, regulation_mode="compensated"))
+    await _climate(hass, "set_temperature", temperature=20, hvac_mode=HVACMode.HEAT)
+    assert bridge.dat0["index_ambient_t1_set"] == 24.0
+    writes = len(bridge.writes)
+
+    # the stove has not applied the write yet: old value, not a change on the stove
+    bridge.dat0["index_ambient_t1_set"] = 22.0
+    await config_entry_refresh(hass)
+    assert hass.states.get("climate.poele").attributes["temperature"] == 20.0
+    bridge.dat0["index_ambient_t1_set"] = 24.0
+
+    freezer.tick(timedelta(minutes=1))
+    bridge.dat0["index_ambient_t1_set"] = 22.5
+    await config_entry_refresh(hass)
+    assert hass.states.get("climate.poele").attributes["temperature"] == 18.5
+    assert len(bridge.writes) == writes
+    assert [e.data["type"] for e in events] == ["setpoint_changed"]
+    assert events[0].data["target"] == "18.5"
+
+    # the regulation goes on from the new target
+    freezer.tick(timedelta(minutes=6))
+    await _room(hass, 18.0)
+    assert bridge.writes[-1] == (
+        "dat/set_ambiance_temp",
+        {"ambiance": 1, "value": 23.5},
+    )
+
+
+async def test_setpoint_changed_on_the_stove_on_off(
+    hass: HomeAssistant, bridge: FakeBridge, freezer: FrozenDateTimeFactory
+) -> None:
+    """On/off: the value set on the stove becomes the target, the stove set point is restored."""
+    await _room(hass, 18.0)
+    await _setup(hass, _entry(temperature_sensor=SENSOR))
+    await _climate(hass, "set_temperature", temperature=20, hvac_mode=HVACMode.HEAT)
+    assert bridge.dat0["index_ambient_t1_set"] == 30.0
+
+    freezer.tick(timedelta(minutes=1))
+    bridge.dat0["index_ambient_t1_set"] = 22.0
+    await config_entry_refresh(hass)
+    assert hass.states.get("climate.poele").attributes["temperature"] == 22.0
+    assert bridge.writes[-1] == (
+        "dat/set_ambiance_temp",
+        {"ambiance": 1, "value": 30.0},
+    )

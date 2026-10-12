@@ -24,6 +24,7 @@ from .const import (
     EVENT_CONNECTION_LOST,
     EVENT_CONNECTION_RESTORED,
     EVENT_SENSOR_UNAVAILABLE,
+    EVENT_SETPOINT_CHANGED,
     EVENT_WRITE_FAILED,
     stove_state_name,
 )
@@ -68,6 +69,10 @@ MESSAGES: dict[str, dict[str, str]] = {
             "Sonde {entity_id} indisponible depuis {minutes} min : "
             "régulation suspendue, le poêle garde son état."
         ),
+        EVENT_SETPOINT_CHANGED: (
+            "Consigne changée sur le poêle ({stove_setpoint} °C) : "
+            "nouvelle cible {target} °C."
+        ),
     },
     "en": {
         EVENT_ALARM: "Alarm: {alarm} (code {code}).",
@@ -78,6 +83,9 @@ MESSAGES: dict[str, dict[str, str]] = {
         EVENT_SENSOR_UNAVAILABLE: (
             "Sensor {entity_id} unavailable for {minutes} min: "
             "regulation paused, the stove keeps its state."
+        ),
+        EVENT_SETPOINT_CHANGED: (
+            "Set point changed on the stove ({stove_setpoint} °C): new target {target} °C."
         ),
     },
 }

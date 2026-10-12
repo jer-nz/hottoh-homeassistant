@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 import pytest
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_capture_events,
+    async_fire_time_changed,
 )
 
 from custom_components.hottoh.const import BUS_EVENT, DOMAIN
@@ -148,3 +152,25 @@ async def test_write_refused(
     await hass.async_block_till_done()
     assert events[-1].data["type"] == "write_failed"
     assert "19" in events[-1].data["detail"]
+
+
+async def test_value_applied_late(
+    hass: HomeAssistant, bridge: FakeBridge, config_entry: MockConfigEntry
+) -> None:
+    """The board applies a power level seconds after its OK: read again a little later."""
+    await _setup(hass, config_entry)
+    before = hass.states.get("number.poele_power_level").state
+    bridge.apply_writes = False
+    await hass.services.async_call(
+        DOMAIN,
+        "set_power_level",
+        {"entity_id": "climate.poele", "level": 4},
+        blocking=True,
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
+    assert hass.states.get("number.poele_power_level").state == before
+    bridge.apply_pending()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=7))
+    await hass.async_block_till_done()
+    assert hass.states.get("number.poele_power_level").state == "4"

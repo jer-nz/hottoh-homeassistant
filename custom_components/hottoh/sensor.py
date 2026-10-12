@@ -60,8 +60,8 @@ def _fan_speed(fan: int) -> HottohSensorDescription:
         translation_placeholders={"fan": str(fan)},
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.dat2.get(f"index_fan_{fan}_speed"),
+        # only the fans declared by the stove board exist
         exists_fn=lambda d: int(d.dat0.get("fan_number", 0)) >= fan,
-        entity_registry_enabled_default=fan == 1,
     )
 
 

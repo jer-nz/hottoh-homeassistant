@@ -55,6 +55,9 @@ class FakeBridge:
         self.write_status = "ok"
         self.write_error_code: int | None = None
         self.down = False
+        # False: the stove applies writes later (`apply_pending`), as the real board does
+        self.apply_writes = True
+        self.pending: list[tuple[str, dict[str, Any]]] = []
         self._next_id = 1
 
     @property
@@ -80,6 +83,12 @@ class FakeBridge:
             "events": [event, *events],
         }
         self.dat0["index_stove_state_raw"] = state_raw if ended_at is None else 0
+
+    def apply_pending(self) -> None:
+        """The stove applies the writes it acknowledged."""
+        for path, body in self.pending:
+            self._apply(path, body)
+        self.pending = []
 
     def _apply(self, path: str, body: dict[str, Any]) -> None:
         d0 = self.dat0
@@ -126,7 +135,10 @@ class FakeBridge:
         self._next_id += 1
         self.writes.append((path, body))
         if self.write_status == "ok":
-            self._apply(path, body)
+            if self.apply_writes:
+                self._apply(path, body)
+            else:
+                self.pending.append((path, body))
         state: dict[str, Any] = {
             "request_id": request_id,
             "command": path,

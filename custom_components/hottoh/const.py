@@ -28,10 +28,10 @@ DEFAULT_WEB_LAN_PORT: Final = 3000
 
 # Release of hottoh_api run in embedded mode, and SHA-256 of its archives
 # (https://github.com/jer-nz/hottoh_api/releases)
-HOTTOH_API_VERSION: Final = "2.3.0"
+HOTTOH_API_VERSION: Final = "2.3.1"
 HOTTOH_API_SHA256: Final[dict[str, str]] = {
-    "amd64": "b1ec4b5ecb1823be1a84db55b9671ddaebe15ccd771661239b11695b4168e1d3",
-    "arm64": "f3089fc5e60b3b3cf6f5789291c9ef5eefe51c0338a0bfcfd61ce99601756f2e",
+    "amd64": "e4dc819963e03f63a8225722b2d3a5256fa04b64e67ef8cc5bfdbd01df3250fd",
+    "arm64": "234dd9d9e1faa9c03843b3d07b3243b629bbefff00b000b1c17e2043f7c9a396",
 }
 
 # Options: thermostat

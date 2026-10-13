@@ -1,40 +1,48 @@
 {
   "config": {
-    "flow_title": "{addon}",
     "step": {
       "user": {
-        "title": "hottoh_api",
+        "title": "Poêle HottoH",
+        "description": "L'intégration dialogue avec le poêle par [hottoh_api](https://github.com/jer-nz/hottoh_api). Où doit-il tourner ?",
+        "menu_options": {
+          "embedded": "Faire tourner hottoh_api dans Home Assistant",
+          "external": "Utiliser un hottoh_api qui tourne déjà sur une autre machine"
+        }
+      },
+      "embedded": {
+        "title": "hottoh_api dans Home Assistant",
+        "description": "hottoh_api {version} est téléchargé depuis GitHub et démarre avec Home Assistant. Le module Wi-Fi n'accepte qu'un client : arrêtez tout autre hottoh_api relié à ce poêle et laissez AppFire en mode cloud.",
+        "data": {
+          "name": "Nom",
+          "stove_host": "Adresse du poêle",
+          "stove_port": "Port du poêle",
+          "web_panel": "Interface web dans la barre latérale",
+          "web_lan": "Interface web sur le réseau local",
+          "web_lan_port": "Port de l'interface web sur le réseau"
+        },
+        "data_description": {
+          "name": "Nom du poêle dans Home Assistant.",
+          "stove_host": "Adresse IP du module Wi-Fi du poêle (donnez-lui une adresse fixe dans votre box).",
+          "stove_port": "Port TCP du module, 5001.",
+          "web_panel": "L'interface de hottoh_api dans un panneau de Home Assistant, pour les administrateurs.",
+          "web_lan": "Sert aussi l'interface sur http://<Home Assistant>:<port>/ pour tout appareil du réseau, sans authentification.",
+          "web_lan_port": "Port ouvert sur la machine de Home Assistant quand l'interface est sur le réseau."
+        }
+      },
+      "external": {
+        "title": "hottoh_api sur une autre machine",
         "description": "Adresse d'une instance [hottoh_api](https://github.com/jer-nz/hottoh_api) en service (son port HTTP, 3000 par défaut).",
         "data": {
           "name": "Nom",
           "host": "Hôte",
-          "port": "Port"
+          "port": "Port",
+          "web_panel": "Interface web dans la barre latérale"
         },
         "data_description": {
           "name": "Nom du poêle dans Home Assistant.",
           "host": "Nom ou adresse IP de la machine qui fait tourner hottoh_api.",
-          "port": "Port HTTP de hottoh_api (`[http_api] port`)."
-        }
-      },
-      "hassio_confirm": {
-        "title": "Add-on hottoh_api",
-        "description": "Ajouter le poêle servi par l'add-on {addon} ?",
-        "data": {
-          "name": "Nom"
-        },
-        "data_description": {
-          "name": "Nom du poêle dans Home Assistant."
-        }
-      },
-      "reconfigure": {
-        "title": "Nouvelle adresse de hottoh_api",
-        "data": {
-          "host": "Hôte",
-          "port": "Port"
-        },
-        "data_description": {
-          "host": "Nom ou adresse IP de la machine qui fait tourner hottoh_api.",
-          "port": "Port HTTP de hottoh_api (`[http_api] port`)."
+          "port": "Port HTTP de hottoh_api (`[http_api] port`).",
+          "web_panel": "L'interface de hottoh_api dans un panneau de Home Assistant, pour les administrateurs."
         }
       },
       "thermostat": {
@@ -48,14 +56,39 @@
           "temperature_sensor": "N'importe quelle sonde de température de Home Assistant, dans la pièce à chauffer.",
           "regulation_mode": "Marche/arrêt : Home Assistant allume et éteint le poêle autour de la consigne. Consigne compensée : le poêle reste allumé, sa consigne est décalée."
         }
+      },
+      "reconfigure": {
+        "title": "Nouvelle adresse de hottoh_api",
+        "data": {
+          "host": "Hôte",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Nom ou adresse IP de la machine qui fait tourner hottoh_api.",
+          "port": "Port HTTP de hottoh_api (`[http_api] port`)."
+        }
+      },
+      "reconfigure_embedded": {
+        "title": "Nouvelle adresse du poêle",
+        "data": {
+          "stove_host": "Adresse du poêle",
+          "stove_port": "Port du poêle"
+        },
+        "data_description": {
+          "stove_host": "Adresse IP du module Wi-Fi du poêle.",
+          "stove_port": "Port TCP du module, 5001."
+        }
       }
     },
     "error": {
-      "cannot_connect": "hottoh_api ne répond pas à cette adresse."
+      "cannot_connect": "hottoh_api ne répond pas à cette adresse.",
+      "download_failed": "Téléchargement de hottoh_api depuis GitHub impossible (voir le journal).",
+      "port_in_use": "Ce port est déjà utilisé sur la machine de Home Assistant."
     },
     "abort": {
       "already_configured": "Ce poêle est déjà configuré.",
-      "reconfigure_successful": "L'adresse a été mise à jour."
+      "reconfigure_successful": "L'adresse a été mise à jour.",
+      "unsupported_architecture": "hottoh_api n'existe pas pour cette machine (amd64 et arm64 seulement) : faites-le tourner sur une autre machine et choisissez l'autre option."
     }
   },
   "options": {
@@ -100,7 +133,34 @@
           "notify_entities": "Entités de notification (notify.send_message).",
           "connection_lost_minutes": "Délai avant de signaler la perte de liaison (le module peut redémarrer seul en 5 min)."
         }
+      },
+      "web": {
+        "title": "Interface web",
+        "description": "Interface de hottoh_api : réglages, programme, historique, module, diagnostic.",
+        "data": {
+          "web_panel": "Interface web dans la barre latérale",
+          "web_lan": "Interface web sur le réseau local",
+          "web_lan_port": "Port de l'interface web sur le réseau"
+        },
+        "data_description": {
+          "web_panel": "L'interface de hottoh_api dans un panneau de Home Assistant, pour les administrateurs.",
+          "web_lan": "Sert aussi l'interface sur http://<Home Assistant>:<port>/ pour tout appareil du réseau, sans authentification.",
+          "web_lan_port": "Port ouvert sur la machine de Home Assistant quand l'interface est sur le réseau."
+        }
+      },
+      "web_external": {
+        "title": "Interface web",
+        "description": "Interface de hottoh_api : réglages, programme, historique, module, diagnostic.",
+        "data": {
+          "web_panel": "Interface web dans la barre latérale"
+        },
+        "data_description": {
+          "web_panel": "L'interface de hottoh_api dans un panneau de Home Assistant, pour les administrateurs."
+        }
       }
+    },
+    "error": {
+      "port_in_use": "Ce port est déjà utilisé sur la machine de Home Assistant."
     }
   },
   "selector": {
@@ -268,6 +328,9 @@
     },
     "no_target": {
       "message": "Choisissez un poêle HottoH chargé (appareil ou entité)."
+    },
+    "embedded_failed": {
+      "message": "Démarrage de hottoh_api impossible : {error}"
     }
   },
   "services": {

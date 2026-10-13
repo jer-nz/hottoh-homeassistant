@@ -8,6 +8,8 @@ license = "MIT"
 [dependency-groups]
 test = [
     "pytest-homeassistant-custom-component==0.13.366",
+    # panel of the web interface (frontend and panel_custom are dependencies)
+    "home-assistant-frontend==20260826.7",
     "ruff",
 ]
 

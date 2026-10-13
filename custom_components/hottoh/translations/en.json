@@ -1,40 +1,48 @@
 {
   "config": {
-    "flow_title": "{addon}",
     "step": {
       "user": {
-        "title": "hottoh_api",
+        "title": "HottoH stove",
+        "description": "The integration talks to the stove through [hottoh_api](https://github.com/jer-nz/hottoh_api). Where should it run?",
+        "menu_options": {
+          "embedded": "Run hottoh_api in Home Assistant",
+          "external": "Use a hottoh_api already running on another computer"
+        }
+      },
+      "embedded": {
+        "title": "hottoh_api in Home Assistant",
+        "description": "hottoh_api {version} is downloaded from GitHub and started with Home Assistant. The Wi-Fi module accepts a single client: stop any other hottoh_api talking to this stove, and keep AppFire in cloud mode.",
+        "data": {
+          "name": "Name",
+          "stove_host": "Address of the stove",
+          "stove_port": "Port of the stove",
+          "web_panel": "Web interface in the sidebar",
+          "web_lan": "Web interface on the local network",
+          "web_lan_port": "Port of the web interface on the network"
+        },
+        "data_description": {
+          "name": "Name of the stove in Home Assistant.",
+          "stove_host": "IP address of the Wi-Fi module of the stove (give it a fixed address in your router).",
+          "stove_port": "TCP port of the module, 5001.",
+          "web_panel": "The interface of hottoh_api in a panel of Home Assistant, for administrators.",
+          "web_lan": "Also serves the interface at http://<Home Assistant>:<port>/ for any device of the network, without authentication.",
+          "web_lan_port": "Port opened on the Home Assistant host when the interface is on the network."
+        }
+      },
+      "external": {
+        "title": "hottoh_api on another computer",
         "description": "Address of a running [hottoh_api](https://github.com/jer-nz/hottoh_api) instance (its HTTP port, 3000 by default).",
         "data": {
           "name": "Name",
           "host": "Host",
-          "port": "Port"
+          "port": "Port",
+          "web_panel": "Web interface in the sidebar"
         },
         "data_description": {
           "name": "Name of the stove in Home Assistant.",
           "host": "Host name or IP address of the computer running hottoh_api.",
-          "port": "HTTP port of hottoh_api (`[http_api] port`)."
-        }
-      },
-      "hassio_confirm": {
-        "title": "hottoh_api add-on",
-        "description": "Add the stove served by the {addon} add-on?",
-        "data": {
-          "name": "Name"
-        },
-        "data_description": {
-          "name": "Name of the stove in Home Assistant."
-        }
-      },
-      "reconfigure": {
-        "title": "New address of hottoh_api",
-        "data": {
-          "host": "Host",
-          "port": "Port"
-        },
-        "data_description": {
-          "host": "Host name or IP address of the computer running hottoh_api.",
-          "port": "HTTP port of hottoh_api (`[http_api] port`)."
+          "port": "HTTP port of hottoh_api (`[http_api] port`).",
+          "web_panel": "The interface of hottoh_api in a panel of Home Assistant, for administrators."
         }
       },
       "thermostat": {
@@ -48,14 +56,39 @@
           "temperature_sensor": "Any temperature sensor of Home Assistant, in the room to heat.",
           "regulation_mode": "On/off: Home Assistant turns the stove on and off around the target. Compensated: the stove stays on, its set point is shifted."
         }
+      },
+      "reconfigure": {
+        "title": "New address of hottoh_api",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Host name or IP address of the computer running hottoh_api.",
+          "port": "HTTP port of hottoh_api (`[http_api] port`)."
+        }
+      },
+      "reconfigure_embedded": {
+        "title": "New address of the stove",
+        "data": {
+          "stove_host": "Address of the stove",
+          "stove_port": "Port of the stove"
+        },
+        "data_description": {
+          "stove_host": "IP address of the Wi-Fi module of the stove.",
+          "stove_port": "TCP port of the module, 5001."
+        }
       }
     },
     "error": {
-      "cannot_connect": "Cannot reach hottoh_api at this address."
+      "cannot_connect": "Cannot reach hottoh_api at this address.",
+      "download_failed": "hottoh_api could not be downloaded from GitHub (see the log).",
+      "port_in_use": "This port is already used on the Home Assistant host."
     },
     "abort": {
       "already_configured": "This stove is already configured.",
-      "reconfigure_successful": "The address was updated."
+      "reconfigure_successful": "The address was updated.",
+      "unsupported_architecture": "hottoh_api has no release for this machine (amd64 and arm64 only): run it on another computer and choose the other option."
     }
   },
   "options": {
@@ -100,7 +133,34 @@
           "notify_entities": "Notify entities (notify.send_message).",
           "connection_lost_minutes": "Delay before a lost stove link is notified (the module may reboot on its own in 5 min)."
         }
+      },
+      "web": {
+        "title": "Web interface",
+        "description": "Interface of hottoh_api: settings, schedule, history, module, diagnostics.",
+        "data": {
+          "web_panel": "Web interface in the sidebar",
+          "web_lan": "Web interface on the local network",
+          "web_lan_port": "Port of the web interface on the network"
+        },
+        "data_description": {
+          "web_panel": "The interface of hottoh_api in a panel of Home Assistant, for administrators.",
+          "web_lan": "Also serves the interface at http://<Home Assistant>:<port>/ for any device of the network, without authentication.",
+          "web_lan_port": "Port opened on the Home Assistant host when the interface is on the network."
+        }
+      },
+      "web_external": {
+        "title": "Web interface",
+        "description": "Interface of hottoh_api: settings, schedule, history, module, diagnostics.",
+        "data": {
+          "web_panel": "Web interface in the sidebar"
+        },
+        "data_description": {
+          "web_panel": "The interface of hottoh_api in a panel of Home Assistant, for administrators."
+        }
       }
+    },
+    "error": {
+      "port_in_use": "This port is already used on the Home Assistant host."
     }
   },
   "selector": {
@@ -268,6 +328,9 @@
     },
     "no_target": {
       "message": "Choose a HottoH stove (device or entity) that is loaded."
+    },
+    "embedded_failed": {
+      "message": "Cannot start hottoh_api: {error}"
     }
   },
   "services": {

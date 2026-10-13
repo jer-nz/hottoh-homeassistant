@@ -12,6 +12,28 @@ MODEL: Final = "Wi-Fi module (hottoh_api)"
 DEFAULT_PORT: Final = 3000
 DEFAULT_SCAN_INTERVAL: Final = 10
 
+# Where hottoh_api runs: started by the integration, or already running elsewhere
+CONF_MODE: Final = "mode"
+MODE_EMBEDDED: Final = "embedded"
+MODE_EXTERNAL: Final = "external"
+CONF_STOVE_HOST: Final = "stove_host"
+CONF_STOVE_PORT: Final = "stove_port"
+DEFAULT_STOVE_PORT: Final = 5001
+
+# Web interface of hottoh_api: panel of Home Assistant, and (embedded) on the local network
+CONF_WEB_PANEL: Final = "web_panel"
+CONF_WEB_LAN: Final = "web_lan"
+CONF_WEB_LAN_PORT: Final = "web_lan_port"
+DEFAULT_WEB_LAN_PORT: Final = 3000
+
+# Release of hottoh_api run in embedded mode, and SHA-256 of its archives
+# (https://github.com/jer-nz/hottoh_api/releases)
+HOTTOH_API_VERSION: Final = "2.3.0"
+HOTTOH_API_SHA256: Final[dict[str, str]] = {
+    "amd64": "b1ec4b5ecb1823be1a84db55b9671ddaebe15ccd771661239b11695b4168e1d3",
+    "arm64": "f3089fc5e60b3b3cf6f5789291c9ef5eefe51c0338a0bfcfd61ce99601756f2e",
+}
+
 # Options: thermostat
 CONF_TEMPERATURE_SENSOR: Final = "temperature_sensor"
 CONF_REGULATION_MODE: Final = "regulation_mode"

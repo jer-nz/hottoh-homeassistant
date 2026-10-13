@@ -1,67 +1,57 @@
 # HottoH for Home Assistant
 
-Home Assistant integration for pellet stoves fitted with the **HottoH Wifier 2.0** Wi-Fi module
-(the one used by the AppFire app, found on CMG, Edilkamin and other brands), through
-[hottoh_api](https://github.com/jer-nz/hottoh_api), a local bridge that speaks the module
-protocol. No cloud.
+Local integration for pellet stoves fitted with the **HottoH Wifier 2.0** Wi-Fi module (used by
+the AppFire app, on CMG, Edilkamin and other brands), through
+[hottoh_api](https://github.com/jer-nz/hottoh_api). No cloud.
 
-- Sensors: state, room/smoke/water temperatures, power, fans, alarms, stove link
-- Settings: power level, fans, eco and chrono modes, chrono programs
-- Thermostat on the stove probe **or on any temperature sensor**, with two regulation modes
-- Notifications on alarms (no pellets, ignition failure, door open...), lost link, refused commands
-- Actions for automations and scripts, weekly schedule included
-- Several stoves: one hottoh_api instance per stove, one config entry each
-
-## Requirements
-
-A running hottoh_api **2.3.0 or later**, either:
-
-- on any computer of your network (see its README for packages and binaries), or
-- as a Home Assistant add-on (Home Assistant OS or Supervised): add the repository
-  `https://github.com/jer-nz/hottoh-homeassistant-addons` to the add-on (app) store of *Settings*,
-  install **hottoh_api**, set the address of the stove and start it. The integration then offers
-  to add the stove by itself.
-
-The Wi-Fi module accepts **a single client**: run one hottoh_api per stove, and nothing else
-talking to it in local mode (AppFire in cloud mode is fine).
+- Sensors, settings (power, fans, eco, chrono) and alarms of the stove
+- Thermostat on the stove probe or on any temperature sensor
+- Notifications, events and actions for automations
+- Web interface of hottoh_api in the sidebar
 
 ## Installation
 
-With [HACS](https://hacs.xyz/): *HACS > three dots > Custom repositories*, add
-`https://github.com/jer-nz/hottoh-homeassistant` as an *Integration*, then download **HottoH** and
-restart Home Assistant.
+With [HACS](https://hacs.xyz/): add `https://github.com/jer-nz/hottoh-homeassistant` as a custom
+repository of type *Integration*, download **HottoH** and restart Home Assistant. Or copy
+`custom_components/hottoh` into the `custom_components` folder of your configuration.
 
-Manually: copy `custom_components/hottoh` into the `custom_components` folder of your
-configuration and restart.
+Then *Settings > Devices & services > Add integration > HottoH*, and choose where hottoh_api runs:
 
-Then *Settings > Devices & services > Add integration > HottoH*, and enter the host and HTTP port
-of hottoh_api (3000 by default).
-The next step chooses the temperature that drives the stove: its own probe, or any temperature
-sensor of Home Assistant.
+- **In Home Assistant**: enter the address of the stove (port 5001; give it a fixed address in
+  your router). The integration downloads hottoh_api from GitHub, checks its SHA-256 and runs it
+  with Home Assistant. 64-bit Linux only (amd64, arm64). Its files are in `<config>/hottoh/`.
+- **On another computer**: enter the address of a hottoh_api **2.3.0 or later** that you run
+  yourself (HTTP port 3000 by default).
+
+The Wi-Fi module accepts **a single client**: one hottoh_api per stove, and AppFire in cloud mode
+only. To switch a stove from one mode to the other, remove it and add it again.
+
+## Web interface
+
+The interface of hottoh_api (stove, schedule, history, module, diagnostics) can be shown:
+
+- **in the sidebar**, for administrators only;
+- **on the local network** at `http://<Home Assistant>:<port>/`, in embedded mode only. It has
+  **no authentication**: anyone on the network can then drive the stove.
+
+Both are set in *Configure > Web interface*.
 
 ## Thermostat
 
-Temperature source and regulation mode are chosen when the stove is added; all settings can be
-changed later in *Configure* on the integration.
+The stove always regulates on **its own probe**, close to it and warmer than the room: a set point
+around 30 °C may be needed for 20 °C in the room. The thermostat chooses what the stove gets:
 
-| Temperature source | Who regulates |
+| Temperature source | Behaviour |
 |---|---|
-| Stove probe (no external sensor) | The stove. The thermostat target is the stove set point, heat/off turns the stove on and off. |
-| External sensor, **on/off** (default) | Home Assistant turns the stove on at `target - hysteresis low` and off at `target + hysteresis high` (1 °C each by default), keeping it on and off at least the minimum times (60 and 30 min by default). The stove set point is raised (30 °C by default) so that the stove does not stop by itself first. |
-| External sensor, **compensated** | The stove stays on and regulates, Home Assistant shifts its set point by the difference between both probes, at most every 5 minutes. |
+| Stove probe | As with the remote control: the target is the stove set point. |
+| External sensor, **on/off** | Home Assistant turns the stove on below `target - 1 °C` and off above `target + 1 °C`, at least 60 min on and 30 min off. The stove set point stays at 30 °C. |
+| External sensor, **compensated** | The stove stays on; its set point is `target + (stove probe - sensor)`, updated at most every 5 min. |
 
-With an external sensor, the chrono mode of the stove is turned off (option), the stove is never
-turned on again while it is still stopping, nothing is sent during an alarm, and the regulation
-pauses while the sensor is unavailable. Turning the thermostat off stops the stove at once.
-
-A set point changed on the control panel of the stove (or in another app) is not written over:
-in compensated mode the target moves by the same amount, in on/off mode the value becomes the
-target and the stove set point is raised again.
-
-After an alarm (failed ignition, no pellets...), the regulation does not turn the stove on again by
-itself: set the thermostat to heat again, or turn the stove on, once the cause is fixed (a failed
-ignition may leave pellets in the burn pot). The `alarm_hold` attribute of the thermostat tells
-when it waits.
+Values in *Configure*. With an external sensor, the chrono mode of the stove is turned off, nothing
+is sent while the stove stops or is in alarm, and the regulation pauses while the sensor is
+unavailable. A set point typed on the stove becomes the new target (in on/off mode, the stove then
+shows 30 °C again). After an alarm, the stove is not turned on again by itself (attribute
+`alarm_hold`). The "external probe / dry contact" input of some stove boards is not used.
 
 ## Notifications and events
 

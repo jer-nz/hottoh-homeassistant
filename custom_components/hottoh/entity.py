@@ -17,7 +17,11 @@ if TYPE_CHECKING:
     from . import HottohConfigEntry
 
 
-def device_info(entry: HottohConfigEntry, coordinator: HottohCoordinator) -> DeviceInfo:
+def device_info(
+    entry: HottohConfigEntry,
+    coordinator: HottohCoordinator,
+    configuration_url: str | None,
+) -> DeviceInfo:
     """Device of a config entry: one stove behind one hottoh_api instance."""
     data = coordinator.data
     # stove brand as reported by the stove board ("Cmg"...), not the module maker
@@ -29,7 +33,7 @@ def device_info(entry: HottohConfigEntry, coordinator: HottohCoordinator) -> Dev
         model=MODEL,
         sw_version=data.inf.get("version") if data else None,
         hw_version=f"hottoh_api {data.status.get('version')}" if data else None,
-        configuration_url=coordinator.client.base_url,
+        configuration_url=configuration_url,
     )
 
 

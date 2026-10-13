@@ -11,11 +11,13 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import configparser
+import contextlib
 import hashlib
 import io
 import logging
 from pathlib import Path
 import platform
+import shutil
 import socket
 import tarfile
 import time
@@ -97,6 +99,17 @@ def free_local_port() -> int:
 def base_directory(hass: HomeAssistant) -> Path:
     """Folder of the integration in the configuration of Home Assistant."""
     return Path(hass.config.path(DOMAIN))
+
+
+def remove_files(hass: HomeAssistant, entry_id: str, keep_binary: bool) -> None:
+    """Deletes the config.ini and logs of a removed stove, and the binary with the last one."""
+    base = base_directory(hass)
+    shutil.rmtree(base / entry_id, ignore_errors=True)
+    if keep_binary:
+        return
+    shutil.rmtree(base / "bin", ignore_errors=True)
+    with contextlib.suppress(OSError):  # not empty: something else lives there
+        base.rmdir()
 
 
 async def async_ensure_binary(hass: HomeAssistant) -> Path:

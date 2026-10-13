@@ -126,6 +126,43 @@ async def test_embedded_setup(hass: HomeAssistant, embedded_bridge: FakeBridge) 
     assert "hottoh-poele" not in hass.data[DATA_PANELS]
 
 
+async def test_remove_entry_files(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Removing a stove deletes its folder; the binary goes with the last embedded stove."""
+    entries = [
+        MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=f"192.168.1.{n}:5001",
+            data={
+                "mode": "embedded",
+                "stove_host": f"192.168.1.{n}",
+                "stove_port": 5001,
+            },
+        )
+        for n in (50, 51)
+    ]
+    external = MockConfigEntry(
+        domain=DOMAIN, unique_id="h:3000", data={"host": "h", "port": 3000}
+    )
+    base = tmp_path / "hottoh"
+    (base / "bin").mkdir(parents=True)
+    (base / "bin" / "hottoh_api-2.3.1").write_bytes(b"binary")
+    for entry in [*entries, external]:
+        entry.add_to_hass(hass)
+        (base / entry.entry_id / "logs").mkdir(parents=True)
+    with (
+        patch("custom_components.hottoh.async_setup_entry", return_value=True),
+        patch("custom_components.hottoh.embedded.base_directory", return_value=base),
+    ):
+        await hass.config_entries.async_remove(entries[0].entry_id)
+        assert not (base / entries[0].entry_id).exists()
+        assert (base / "bin" / "hottoh_api-2.3.1").exists()
+        await hass.config_entries.async_remove(external.entry_id)
+        assert (base / external.entry_id).exists()
+        await hass.config_entries.async_remove(entries[1].entry_id)
+    assert not (base / entries[1].entry_id).exists()
+    assert not (base / "bin").exists()
+
+
 async def test_embedded_start_failed(hass: HomeAssistant) -> None:
     """Setup retried later when hottoh_api cannot start."""
     entry = MockConfigEntry(

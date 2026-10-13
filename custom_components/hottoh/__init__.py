@@ -26,7 +26,7 @@ from .const import (
     MODE_EXTERNAL,
 )
 from .coordinator import HottohCoordinator
-from .embedded import LOCALHOST, EmbeddedBridge, EmbeddedError
+from .embedded import LOCALHOST, EmbeddedBridge, EmbeddedError, remove_files
 from .entity import device_info
 from .notifier import HottohNotifier
 from .services import async_setup_services
@@ -164,3 +164,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: HottohConfigEntry) -> b
     if runtime.embedded is not None:
         await runtime.embedded.async_stop()
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: HottohConfigEntry) -> None:
+    """Deletes the files of an embedded hottoh_api once its stove is removed."""
+    if entry.data.get(CONF_MODE) != MODE_EMBEDDED:
+        return
+    others = any(
+        other.entry_id != entry.entry_id and other.data.get(CONF_MODE) == MODE_EMBEDDED
+        for other in hass.config_entries.async_entries(DOMAIN)
+    )
+    await hass.async_add_executor_job(remove_files, hass, entry.entry_id, others)

@@ -30,10 +30,10 @@ HOTTOH_API_URL: Final = "https://github.com/jer-nz/hottoh_api"
 
 # Release of hottoh_api run in embedded mode, and SHA-256 of its archives
 # (https://github.com/jer-nz/hottoh_api/releases)
-HOTTOH_API_VERSION: Final = "2.3.1"
+HOTTOH_API_VERSION: Final = "2.3.2"
 HOTTOH_API_SHA256: Final[dict[str, str]] = {
-    "amd64": "e4dc819963e03f63a8225722b2d3a5256fa04b64e67ef8cc5bfdbd01df3250fd",
-    "arm64": "234dd9d9e1faa9c03843b3d07b3243b629bbefff00b000b1c17e2043f7c9a396",
+    "amd64": "768f7a3ab9a5f8cf14d174b35ade024397c2b65529805969cb2d8d2564a75468",
+    "arm64": "449ff5656ca282011432ccc19d50a14a4384f13531e2b7fc0f070fd6d17fa867",
 }
 
 # Options: thermostat

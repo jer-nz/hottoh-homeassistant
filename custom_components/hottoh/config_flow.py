@@ -52,6 +52,7 @@ from .const import (
     DEFAULT_STOVE_PORT,
     DEFAULT_WEB_LAN_PORT,
     DOMAIN,
+    HOTTOH_API_URL,
     HOTTOH_API_VERSION,
     MODE_EMBEDDED,
     MODE_EXTERNAL,
@@ -178,7 +179,9 @@ class HottohConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Where hottoh_api runs."""
         return self.async_show_menu(
-            step_id="user", menu_options=[MODE_EMBEDDED, MODE_EXTERNAL]
+            step_id="user",
+            menu_options=[MODE_EMBEDDED, MODE_EXTERNAL],
+            description_placeholders={"hottoh_api_url": HOTTOH_API_URL},
         )
 
     async def async_step_embedded(
@@ -252,6 +255,7 @@ class HottohConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="external",
             data_schema=_external_schema(user_input or {}, creating=True),
+            description_placeholders={"hottoh_api_url": HOTTOH_API_URL},
             errors=errors,
         )
 

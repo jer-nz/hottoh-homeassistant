@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Poêle HottoH",
-        "description": "L'intégration dialogue avec le poêle par [hottoh_api](https://github.com/jer-nz/hottoh_api). Où doit-il tourner ?",
+        "description": "L'intégration dialogue avec le poêle par [hottoh_api]({hottoh_api_url}). Où doit-il tourner ?",
         "menu_options": {
           "embedded": "Faire tourner hottoh_api dans Home Assistant",
           "external": "Utiliser un hottoh_api qui tourne déjà sur une autre machine"
@@ -25,13 +25,13 @@
           "stove_host": "Adresse IP du module Wi-Fi du poêle (donnez-lui une adresse fixe dans votre box).",
           "stove_port": "Port TCP du module, 5001.",
           "web_panel": "L'interface de hottoh_api dans un panneau de Home Assistant, pour les administrateurs.",
-          "web_lan": "Sert aussi l'interface sur http://<Home Assistant>:<port>/ pour tout appareil du réseau, sans authentification.",
+          "web_lan": "Sert aussi l'interface sur ce port de la machine Home Assistant, pour tout appareil du réseau, sans authentification.",
           "web_lan_port": "Port ouvert sur la machine de Home Assistant quand l'interface est sur le réseau."
         }
       },
       "external": {
         "title": "hottoh_api sur une autre machine",
-        "description": "Adresse d'une instance [hottoh_api](https://github.com/jer-nz/hottoh_api) en service (son port HTTP, 3000 par défaut).",
+        "description": "Adresse d'une instance [hottoh_api]({hottoh_api_url}) en service (son port HTTP, 3000 par défaut).",
         "data": {
           "name": "Nom",
           "host": "Hôte",
@@ -144,7 +144,7 @@
         },
         "data_description": {
           "web_panel": "L'interface de hottoh_api dans un panneau de Home Assistant, pour les administrateurs.",
-          "web_lan": "Sert aussi l'interface sur http://<Home Assistant>:<port>/ pour tout appareil du réseau, sans authentification.",
+          "web_lan": "Sert aussi l'interface sur ce port de la machine Home Assistant, pour tout appareil du réseau, sans authentification.",
           "web_lan_port": "Port ouvert sur la machine de Home Assistant quand l'interface est sur le réseau."
         }
       },
@@ -412,7 +412,7 @@
       "fields": {
         "days": {
           "name": "Jours",
-          "description": "Liste de jours, chacun avec `day` (sunday à saturday) et `ranges` ({start, end, program}) ou 48 `slots`."
+          "description": "Liste de jours, chacun avec `day` (sunday à saturday) et `ranges` (`start`, `end`, `program`) ou 48 `slots`."
         }
       }
     },

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "HottoH stove",
-        "description": "The integration talks to the stove through [hottoh_api](https://github.com/jer-nz/hottoh_api). Where should it run?",
+        "description": "The integration talks to the stove through [hottoh_api]({hottoh_api_url}). Where should it run?",
         "menu_options": {
           "embedded": "Run hottoh_api in Home Assistant",
           "external": "Use a hottoh_api already running on another computer"
@@ -25,13 +25,13 @@
           "stove_host": "IP address of the Wi-Fi module of the stove (give it a fixed address in your router).",
           "stove_port": "TCP port of the module, 5001.",
           "web_panel": "The interface of hottoh_api in a panel of Home Assistant, for administrators.",
-          "web_lan": "Also serves the interface at http://<Home Assistant>:<port>/ for any device of the network, without authentication.",
+          "web_lan": "Also serves the interface on this port of the Home Assistant host, for any device of the network, without authentication.",
           "web_lan_port": "Port opened on the Home Assistant host when the interface is on the network."
         }
       },
       "external": {
         "title": "hottoh_api on another computer",
-        "description": "Address of a running [hottoh_api](https://github.com/jer-nz/hottoh_api) instance (its HTTP port, 3000 by default).",
+        "description": "Address of a running [hottoh_api]({hottoh_api_url}) instance (its HTTP port, 3000 by default).",
         "data": {
           "name": "Name",
           "host": "Host",
@@ -144,7 +144,7 @@
         },
         "data_description": {
           "web_panel": "The interface of hottoh_api in a panel of Home Assistant, for administrators.",
-          "web_lan": "Also serves the interface at http://<Home Assistant>:<port>/ for any device of the network, without authentication.",
+          "web_lan": "Also serves the interface on this port of the Home Assistant host, for any device of the network, without authentication.",
           "web_lan_port": "Port opened on the Home Assistant host when the interface is on the network."
         }
       },
@@ -412,7 +412,7 @@
       "fields": {
         "days": {
           "name": "Days",
-          "description": "List of days, each with `day` (sunday to saturday) and `ranges` ({start, end, program}) or 48 `slots`."
+          "description": "List of days, each with `day` (sunday to saturday) and `ranges` (`start`, `end`, `program`) or 48 `slots`."
         }
       }
     },

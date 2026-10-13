@@ -1,11 +1,7 @@
-.target: &target
-  device:
-    integration: hottoh
-  entity:
-    integration: hottoh
-
 set_power_level:
-  target: *target
+  target: &target
+    entity:
+      integration: hottoh
   fields:
     level:
       required: true

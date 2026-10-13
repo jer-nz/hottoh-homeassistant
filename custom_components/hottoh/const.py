@@ -26,6 +26,8 @@ CONF_WEB_LAN: Final = "web_lan"
 CONF_WEB_LAN_PORT: Final = "web_lan_port"
 DEFAULT_WEB_LAN_PORT: Final = 3000
 
+HOTTOH_API_URL: Final = "https://github.com/jer-nz/hottoh_api"
+
 # Release of hottoh_api run in embedded mode, and SHA-256 of its archives
 # (https://github.com/jer-nz/hottoh_api/releases)
 HOTTOH_API_VERSION: Final = "2.3.1"

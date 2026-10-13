@@ -14,6 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=15)
 # hottoh_api ends a write as `timeout` after 60 s: wait a little longer
 WRITE_WAIT_S = 70
+# a clock write without time is first held until the start of the next minute (up to 60 s)
+CLOCK_WAIT_S = 60 + WRITE_WAIT_S
 WRITE_POLL_S = 0.5
 
 WRITE_OK = "ok"
@@ -133,7 +135,9 @@ class HottohClient:
         results = await asyncio.gather(*(self.get(p) for p in paths.values()))
         return dict(zip(paths, results, strict=True))
 
-    async def write(self, path: str, body: dict[str, Any]) -> WriteResult:
+    async def write(
+        self, path: str, body: dict[str, Any], wait_s: float = WRITE_WAIT_S
+    ) -> WriteResult:
         """Queues a write and waits for the answer of the stove.
 
         Raises HottohWriteError when the stove refuses it or does not answer.
@@ -141,7 +145,7 @@ class HottohClient:
         answer = await self._request("POST", path, json=body)
         request_id = int(answer["request_id"])
         loop = asyncio.get_running_loop()
-        deadline = loop.time() + WRITE_WAIT_S
+        deadline = loop.time() + wait_s
         while True:
             await asyncio.sleep(WRITE_POLL_S)
             state = await self.get(f"/api/request/{request_id}")
@@ -206,7 +210,7 @@ class HottohClient:
 
     async def sync_clock(self) -> WriteResult:
         """Sets the module and stove clocks from the clock of hottoh_api."""
-        return await self.write("/api/clock", {})
+        return await self.write("/api/clock", {}, CLOCK_WAIT_S)
 
     async def restart_module(self) -> None:
         """Restarts the Wi-Fi module (no answer expected)."""

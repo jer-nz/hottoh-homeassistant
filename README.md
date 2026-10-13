@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/jer-nz/hottoh-homeassistant/main/custom_components/hottoh/brand/icon.png" alt="" width="96" align="right">
+
 # HottoH for Home Assistant
 
 Local integration for pellet stoves fitted with the **HottoH Wifier 2.0** Wi-Fi module (used by

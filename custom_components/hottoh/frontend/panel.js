@@ -10,7 +10,11 @@ class HottohPanel extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.innerHTML = `
       <style>
-        :host { display: flex; flex-direction: column; height: 100%;
+        /* ha-panel-custom is a block without a height (padded by the safe areas):
+           100% would leave the iframe at its default 150 px */
+        :host { display: flex; flex-direction: column;
+          height: calc(100vh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px));
+          height: calc(100dvh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px));
           background: var(--primary-background-color); }
         .toolbar { display: flex; align-items: center; height: var(--header-height, 56px);
           padding: 0 12px; box-sizing: border-box; flex-shrink: 0;
@@ -19,7 +23,7 @@ class HottohPanel extends HTMLElement {
           border-bottom: var(--app-header-border-bottom, none);
           font-size: 20px; }
         .title { margin-left: 12px; }
-        iframe { flex: 1; width: 100%; border: 0; display: block; }
+        iframe { flex: 1; min-height: 0; width: 100%; border: 0; display: block; }
         .error { padding: 16px; color: var(--error-color); }
       </style>
       <div class="toolbar"><ha-menu-button></ha-menu-button><span class="title"></span></div>

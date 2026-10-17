@@ -1,4 +1,6 @@
-<img src="https://raw.githubusercontent.com/jer-nz/hottoh-homeassistant/main/custom_components/hottoh/brand/icon.png" alt="" width="96" align="right">
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jer-nz/hottoh-homeassistant/main/custom_components/hottoh/brand/icon.png" alt="" width="96">
+</p>
 
 # HottoH for Home Assistant
 

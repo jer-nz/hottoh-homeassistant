@@ -43,6 +43,12 @@ class HottohData:
         return bool(self.status.get("connected"))
 
     @property
+    def valid(self) -> bool:
+        """The pages hold stove data: a restarted module serves zeros until its Modbus link
+        with the stove board is up (a few seconds, `index_valid` false)."""
+        return self.connected and bool(self.dat0.get("index_valid", True))
+
+    @property
     def state_raw(self) -> int | None:
         """Raw stove state."""
         value = self.dat0.get("index_stove_state_raw")

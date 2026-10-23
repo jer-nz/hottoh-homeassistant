@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .api import HottohClient, WriteResult
 from .coordinator import HottohCoordinator, HottohData
-from .entity import HottohEntity, async_write
+from .entity import HottohEntity, async_add_stove_entities, async_write
 
 if TYPE_CHECKING:
     from . import HottohConfigEntry
@@ -112,8 +112,8 @@ async def async_setup_entry(
 ) -> None:
     """Creates the settings the stove has."""
     coordinator = entry.runtime_data.coordinator
-    async_add_entities(
-        HottohNumber(coordinator, d) for d in NUMBERS if d.exists_fn(coordinator.data)
+    async_add_stove_entities(
+        coordinator, NUMBERS, lambda d: HottohNumber(coordinator, d), async_add_entities
     )
 
 

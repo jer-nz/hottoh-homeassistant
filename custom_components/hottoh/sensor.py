@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import STATE_UNKNOWN_STOVE, STOVE_STATES, stove_state_name
 from .coordinator import HottohCoordinator, HottohData
-from .entity import HottohEntity
+from .entity import HottohEntity, async_add_stove_entities
 
 if TYPE_CHECKING:
     from . import HottohConfigEntry
@@ -175,10 +175,11 @@ async def async_setup_entry(
 ) -> None:
     """Creates the sensors the stove has."""
     coordinator = entry.runtime_data.coordinator
-    async_add_entities(
-        HottohSensor(coordinator, description)
-        for description in SENSORS
-        if description.exists_fn(coordinator.data)
+    async_add_stove_entities(
+        coordinator,
+        SENSORS,
+        lambda description: HottohSensor(coordinator, description),
+        async_add_entities,
     )
 
 

@@ -152,6 +152,7 @@ async def _async_connect(
         **device_info(entry, coordinator, configuration_url),
     )
     notifier.device_id = device.id
+    notifier.async_start()
     return HottohRuntime(client, coordinator, notifier, embedded, panel)
 
 

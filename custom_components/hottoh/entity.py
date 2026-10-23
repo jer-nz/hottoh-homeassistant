@@ -2,19 +2,72 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable
-from typing import TYPE_CHECKING, Any
+from collections.abc import Awaitable, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Protocol
 
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import HottohClient, HottohError, HottohWriteError, WriteResult
 from .const import DOMAIN, MODEL
-from .coordinator import HottohCoordinator
+from .coordinator import HottohCoordinator, HottohData
 
 if TYPE_CHECKING:
     from . import HottohConfigEntry
+
+
+class StoveDescription(Protocol):
+    """Entity description that exists only on some stoves."""
+
+    @property
+    def key(self) -> str: ...
+
+    @property
+    def exists_fn(self) -> Callable[[HottohData], bool]: ...
+
+
+@callback
+def async_add_stove_entities[D: StoveDescription](
+    coordinator: HottohCoordinator,
+    descriptions: Iterable[D],
+    factory: Callable[[D], Entity],
+    add_entities: Callable[[Iterable[Entity]], None],
+) -> None:
+    """Adds the entities the stove has.
+
+    Which ones it has comes from the stove board: while hottoh_api has no valid page (just
+    started, module restarting after a power cut), the others are added at the first one.
+    """
+    pending = list(descriptions)
+
+    @callback
+    def add() -> bool:
+        data = coordinator.data
+        ready = [d for d in pending if d.exists_fn(data)]
+        if ready:
+            add_entities(factory(d) for d in ready)
+            pending[:] = [d for d in pending if all(d is not r for r in ready)]
+        return data.valid
+
+    if add():
+        return
+    unsubscribe: list[Callable[[], None]] = []
+
+    @callback
+    def listener() -> None:
+        if add():
+            unsubscribe.pop()()
+
+    @callback
+    def stop() -> None:
+        if unsubscribe:
+            unsubscribe.pop()()
+
+    unsubscribe.append(coordinator.async_add_listener(listener))
+    coordinator.config_entry.async_on_unload(stop)
 
 
 def device_info(
@@ -82,7 +135,7 @@ class HottohEntity(CoordinatorEntity[HottohCoordinator]):
         """Data of the stove are fresh."""
         if not super().available:
             return False
-        return self.coordinator.data.connected or not self._needs_stove
+        return self.coordinator.data.valid or not self._needs_stove
 
     @property
     def dat0(self) -> dict[str, Any]:

@@ -83,6 +83,36 @@ async def test_setup_retry(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_entities_after_module_restart(
+    hass: HomeAssistant, bridge: FakeBridge, config_entry: MockConfigEntry
+) -> None:
+    """Started while the module has no Modbus link: the entities of the stove board come
+    with the first valid page."""
+    page = bridge.module_restarting()
+    await _setup(hass, config_entry)
+    assert hass.states.get("sensor.poele_room_temperature") is None
+    assert hass.states.get("sensor.poele_state").state == STATE_UNAVAILABLE
+
+    bridge.pages["dat/0"] = page
+    await config_entry.runtime_data.coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.poele_room_temperature").state == str(
+        page["index_ambient_t1"]
+    )
+    assert hass.states.get("sensor.poele_state").state == "off"
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_unload_before_valid_page(
+    hass: HomeAssistant, bridge: FakeBridge, config_entry: MockConfigEntry
+) -> None:
+    """Unloaded while still waiting for a valid page."""
+    bridge.module_restarting()
+    await _setup(hass, config_entry)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_stove_lost(
     hass: HomeAssistant, bridge: FakeBridge, config_entry: MockConfigEntry
 ) -> None:

@@ -317,7 +317,7 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
     @callback
     def _observe_stove(self) -> None:
         data = self.coordinator.data
-        if data is None or not data.connected:
+        if data is None or not data.valid:
             return
         on = bool(data.dat0.get("index_stove_on"))
         if self._stove_on is not None and on != self._stove_on:
@@ -431,7 +431,7 @@ class HottohClimate(HottohEntity, ClimateEntity, RestoreEntity):
 
     async def _async_regulate_locked(self) -> None:
         data = self.coordinator.data
-        if not self._external or data is None or not data.connected:
+        if not self._external or data is None or not data.valid:
             return
         now = dt_util.utcnow().timestamp()
         self._check_sensor_timeout(now)

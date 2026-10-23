@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_capture_events,
@@ -74,6 +75,33 @@ async def test_existing_alarm_not_notified(
     await _poll(hass, entry)
     assert calls == []
     assert hass.states.get("binary_sensor.poele_alarm").state == "on"
+
+
+async def test_recent_alarm_at_start_notified(
+    hass: HomeAssistant, bridge: FakeBridge, freezer: FrozenDateTimeFactory
+) -> None:
+    """Power cut: Home Assistant starts with the stove, whose alarm is already there; it is
+    notified once Home Assistant has started (notify services ready), in order."""
+    freezer.move_to("2026-10-23T06:55:00+00:00")
+    calls = async_mock_service(hass, "notify", "phone")
+    events = async_capture_events(hass, BUS_EVENT)
+    bridge.set_alarm(16, "2026-10-23T08:52:34+02:00")
+    hass.set_state(CoreState.starting)
+    entry = _entry(notify_services=["notify.phone"])
+    await _setup(hass, entry)
+    bridge.set_alarm(16, "2026-10-23T08:52:34+02:00", "2026-10-23T08:56:00+02:00")
+    await _poll(hass, entry)
+    assert calls == []
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert [e.data["type"] for e in events] == ["alarm", "alarm_cleared"]
+    assert events[0].data["device_id"] is not None
+    assert [c.data["message"] for c in calls] == [
+        "Alarm: power cut (code 16).",
+        "Alarm cleared: power cut (code 16).",
+    ]
 
 
 async def test_events_filter_and_persistent(

@@ -84,6 +84,15 @@ class FakeBridge:
         }
         self.dat0["index_stove_state_raw"] = state_raw if ended_at is None else 0
 
+    def module_restarting(self) -> dict[str, Any]:
+        """Page 0 of a module whose Modbus link is not up yet; returns the real page."""
+        page = self.dat0
+        self.pages["dat/0"] = {
+            key: value if isinstance(value, str) else type(value)()
+            for key, value in page.items()
+        }
+        return page
+
     def apply_pending(self) -> None:
         """The stove applies the writes it acknowledged."""
         for path, body in self.pending:

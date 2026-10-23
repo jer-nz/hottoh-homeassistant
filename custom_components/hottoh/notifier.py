@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import persistent_notification
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.start import async_at_started
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -36,6 +38,11 @@ if TYPE_CHECKING:
     from .coordinator import HottohData
 
 _LOGGER = logging.getLogger(__name__)
+
+# alarm already in the history of hottoh_api when Home Assistant starts: notified when it
+# began this recently (a power cut restarts Home Assistant and the stove together), not
+# again after a restart of Home Assistant long after it
+STARTUP_ALARM_AGE = timedelta(minutes=15)
 
 ALARM_LABELS: dict[str, dict[str, str]] = {
     "fr": {
@@ -95,6 +102,11 @@ def _alarm_key(event: dict[str, Any]) -> tuple[str, int]:
     return (str(event.get("started_at")), int(event.get("state_raw", 0)))
 
 
+def _recent(started_at: str) -> bool:
+    started = dt_util.parse_datetime(started_at)
+    return started is not None and dt_util.utcnow() - started < STARTUP_ALARM_AGE
+
+
 class HottohNotifier:
     """Turns successive polls into events and notifications."""
 
@@ -108,6 +120,31 @@ class HottohNotifier:
         self._lost_since: datetime | None = None
         self._lost_detail = ""
         self._lost_notified = False
+        # alarm events seen before Home Assistant has started (notify services missing)
+        self._started = False
+        self._startup_events: list[tuple[str, dict[str, str | None]]] = []
+
+    @callback
+    def async_start(self) -> None:
+        """Sends the events of the first poll once the notify services exist."""
+        self.entry.async_on_unload(
+            async_at_started(self.hass, self._async_emit_startup_events)
+        )
+
+    @callback
+    def _async_emit_startup_events(self, _hass: HomeAssistant) -> None:
+        self._started = True
+        events, self._startup_events = self._startup_events, []
+        for event_type, placeholders in events:
+            self.emit(event_type, **placeholders)
+
+    def _alarm_event(
+        self, event_type: str, placeholders: dict[str, str | None]
+    ) -> None:
+        if self._started:
+            self.emit(event_type, **placeholders)
+        else:
+            self._startup_events.append((event_type, placeholders))
 
     @property
     def _language(self) -> str:
@@ -138,20 +175,20 @@ class HottohNotifier:
             ended = event.get("ended_at") is not None
             known = self._alarms.get(key)
             self._alarms[key] = ended
-            if not self._initialized:
+            if not self._initialized and not _recent(key[0]):
                 continue
-            placeholders = {
+            placeholders: dict[str, str | None] = {
                 "alarm": self._alarm_label(key[1]),
                 "code": str(key[1]),
                 "state": stove_state_name(key[1]),
                 "started_at": key[0],
             }
             if known is None:
-                self.emit(EVENT_ALARM, **placeholders)
+                self._alarm_event(EVENT_ALARM, placeholders)
                 if ended:
-                    self.emit(EVENT_ALARM_CLEARED, **placeholders)
+                    self._alarm_event(EVENT_ALARM_CLEARED, placeholders)
             elif not known and ended:
-                self.emit(EVENT_ALARM_CLEARED, **placeholders)
+                self._alarm_event(EVENT_ALARM_CLEARED, placeholders)
         # forget alarms that left the history of hottoh_api
         current = {_alarm_key(e) for e in events}
         for key in list(self._alarms):

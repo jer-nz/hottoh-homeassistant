@@ -238,3 +238,27 @@ async def test_setpoint_changed_on_the_stove_on_off(
         "dat/set_ambiance_temp",
         {"ambiance": 1, "value": 30.0},
     )
+
+
+async def test_module_restart_ignored(
+    hass: HomeAssistant, bridge: FakeBridge, freezer: FrozenDateTimeFactory
+) -> None:
+    """The zeros of a restarting module are neither a set point changed on the stove nor
+    a stove turned off."""
+    events = []
+    hass.bus.async_listen("hottoh_event", events.append)
+    bridge.dat0["index_ambient_t1"] = 23.0
+    await _room(hass, 19.0)
+    await _setup(hass, _entry(temperature_sensor=SENSOR, regulation_mode="compensated"))
+    await _climate(hass, "set_temperature", temperature=20, hvac_mode=HVACMode.HEAT)
+    writes = len(bridge.writes)
+
+    freezer.tick(timedelta(minutes=1))
+    page = bridge.module_restarting()
+    await config_entry_refresh(hass)
+    freezer.tick(timedelta(seconds=10))
+    bridge.pages["dat/0"] = page
+    await config_entry_refresh(hass)
+    assert hass.states.get("climate.poele").attributes["temperature"] == 20.0
+    assert len(bridge.writes) == writes
+    assert events == []

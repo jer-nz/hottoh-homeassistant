@@ -120,7 +120,7 @@ async def test_embedded_setup(hass: HomeAssistant, embedded_bridge: FakeBridge) 
         assert runtime.panel == "hottoh-poele"
         panel = hass.data[DATA_PANELS]["hottoh-poele"]
         assert panel.require_admin
-        assert panel.config["relay"] == f"/api/hottoh/web/{entry.entry_id}/"
+        assert panel.config["entry_id"] == entry.entry_id
         assert await hass.config_entries.async_unload(entry.entry_id)
     stop.assert_awaited_once()
     assert "hottoh-poele" not in hass.data[DATA_PANELS]
@@ -184,25 +184,28 @@ async def test_web_relay(
     hass_client,
     hass_read_only_access_token: str,
 ) -> None:
-    """The relay needs a session, opened by an administrator only."""
+    """The relay needs a session, opened by an administrator only (see test_web.py)."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    url = f"/api/hottoh/web/{config_entry.entry_id}/api/status"
+    entry_id = config_entry.entry_id
+    body = {"entry_id": entry_id}
 
     reader = await hass_client(hass_read_only_access_token)
-    assert (await reader.post("/api/hottoh/session")).status == 401
-    assert (await reader.get(url)).status == 401
+    assert (await reader.post("/api/hottoh/session", json=body)).status == 401
 
     admin = await hass_client()
-    assert (await admin.get(url)).status == 401
-    resp = await admin.post("/api/hottoh/session")
+    assert (
+        await admin.get(f"/api/hottoh/web/{entry_id}/forged/api/status")
+    ).status == 401
+    resp = await admin.post("/api/hottoh/session", json=body)
     assert resp.status == 200
-    assert resp.cookies["hottoh_session"]["httponly"]
-    resp = await admin.get(url)
+    assert "Set-Cookie" not in resp.headers
+    url = (await resp.json())["url"]
+    resp = await admin.get(url + "api/status")
     assert resp.status == 200
     # the aiohttp mocker sends no Content-Type
     assert json.loads(await resp.text())["stove_address"] == "192.168.1.50:5001"
-    resp = await admin.get(f"/api/hottoh/web/{config_entry.entry_id}/api/nothing")
-    assert resp.status == 404
-    assert (await admin.get("/api/hottoh/web/unknown/api/status")).status == 404
+    assert (await admin.get(url + "api/nothing")).status == 404
+    unknown = await admin.post("/api/hottoh/session", json={"entry_id": "unknown"})
+    assert unknown.status == 404

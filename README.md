@@ -34,7 +34,8 @@ only. To switch a stove from one mode to the other, remove it and add it again.
 
 The interface of hottoh_api (stove, schedule, history, module, diagnostics) can be shown:
 
-- **in the sidebar**, for administrators only;
+- **in the sidebar**, for administrators only. The interface runs in a sandbox: it cannot read
+  what Home Assistant keeps in the browser (such as the access token) nor call its API;
 - **on the local network** at `http://<Home Assistant>:<port>/`, in embedded mode only. It has
   **no authentication**: anyone on the network can then drive the stove.
 

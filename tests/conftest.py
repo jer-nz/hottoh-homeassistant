@@ -139,7 +139,8 @@ class FakeBridge:
             return AiohttpClientMockResponse(
                 method, url, status=404, json={"error": path}
             )
-        body = data or {}
+        # the relay sends the body of the page as it got it
+        body = json.loads(data) if isinstance(data, bytes | str) else data or {}
         request_id = self._next_id
         self._next_id += 1
         self.writes.append((path, body))

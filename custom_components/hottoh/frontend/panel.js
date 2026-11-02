@@ -1,6 +1,9 @@
 // Panel of a HottoH stove: the web interface of hottoh_api, relayed by Home Assistant.
-// The relay accepts a session cookie instead of the access token, which an iframe cannot send:
-// the panel opens the session, then renews it while it is shown.
+// The interface is not trusted: it runs in a sandboxed iframe (no `allow-same-origin`), so it
+// cannot read what Home Assistant keeps in this origin, and cannot send the access token or
+// cookies either. The relay authenticates it with a short-lived token in the URL: the panel
+// asks for it (authenticated), then renews it while it is shown. The URL stays the same while
+// the token is renewed, so the interface is not reloaded.
 
 const RENEW_MS = 5 * 60 * 1000;
 
@@ -27,7 +30,7 @@ class HottohPanel extends HTMLElement {
         .error { padding: 16px; color: var(--error-color); }
       </style>
       <div class="toolbar"><ha-menu-button></ha-menu-button><span class="title"></span></div>
-      <iframe title="hottoh_api" hidden></iframe>
+      <iframe title="hottoh_api" sandbox="allow-scripts allow-forms allow-downloads" referrerpolicy="no-referrer" hidden></iframe>
       <div class="error" hidden></div>`;
     this._menu = this.shadowRoot.querySelector('ha-menu-button');
     this._frame = this.shadowRoot.querySelector('iframe');
@@ -69,11 +72,15 @@ class HottohPanel extends HTMLElement {
 
   async _session() {
     try {
-      await this._hass.callApi('POST', 'hottoh/session');
+      const body = { entry_id: this._panel.config.entry_id };
+      if (this._token) {
+        body.token = this._token;
+      }
+      const session = await this._hass.callApi('POST', 'hottoh/session', body);
+      this._token = session.token;
       this._error.hidden = true;
-      const relay = this._panel.config.relay;
-      if (this._frame.getAttribute('src') !== relay) {
-        this._frame.src = relay;
+      if (this._frame.getAttribute('src') !== session.url) {
+        this._frame.src = session.url;
       }
       this._frame.hidden = false;
     } catch (err) {
